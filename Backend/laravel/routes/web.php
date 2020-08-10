@@ -16,3 +16,15 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::get('/admin',function(){
+    return view("admin");
+});
+
+Route::get('/testmail',function(){
+    $user = new stdClass();
+    $user->email = "pthuduong97@gmail.com";
+    $user->name = "Pham Thuy Duong";
+    $user->verification_code = 12345;
+    return new App\Mail\VerificationMail($user);
+});

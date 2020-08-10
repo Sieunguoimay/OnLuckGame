@@ -14,6 +14,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+Route::get('onluck','OnluckController@GetInfo');
+Route::post('onluck/signin','OnluckController@SignIn');
+Route::post('onluck/signup','OnluckController@SignUp');
+Route::get('onluck/signup','OnluckController@SignUp');
+Route::get('onluck/login','OnluckController@LogIn');
+Route::get('onluck/getusers','OnluckController@GetUsers');
+Route::get('onluck/deleteuser','OnluckController@DeleteUser');
+Route::get('onluck/resendverificaionemail','OnluckController@ResendVerificationEmail');
+Route::get('onluck/verifyemail','OnluckController@VerifyEmail');
+Route::post('onluck/uploadphoto','OnluckController@UploadPhoto');
+Route::post('onluck/rename','OnluckController@Rename');
+Route::get('onluck/getscoreboard','OnluckController@GetScoreboard');

@@ -5,6 +5,7 @@ UnityProject/build
 UnityProject/Assets/*.meta
 UnityProject/Assets/Plugins
 UnityProject/Assets/PlayServicesResolver
+UnityProject/.vs
 
 Designs/*.zip
 Designs/*.rar
