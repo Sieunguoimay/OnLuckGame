@@ -19,7 +19,7 @@ class CreateUsersTable extends Migration
             $table->integer('verification_code');
             $table->string('password');
             $table->string('last_active_vendor_name');
-            $table->integer('score')->default(0);
+            $table->integer('uptodate_token')->default(0);
             $table->rememberToken();
             $table->timestamps();
         });

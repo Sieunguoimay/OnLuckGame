@@ -40,39 +40,26 @@ public class QuestionItem : MonoBehaviour
         UiIndexText.text = (index+1).ToString();
         Index = index;
     }
-    public void SetState(States state)
-    {
-        State = state;
-        switch (State)
-        {
-            case States.QI_LOCKED:
-                UiButton.interactable = false;
-                ShowIcon(0);
-                break;
-            case States.QI_ACTIVE:
-                UiButton.interactable = true;
-                ShowIcon(1);
-                break;
-            case States.QI_WRONGLY_ANSWERED:
-                ShowIcon(2);
-                break;
-            case States.QI_CORRECTLY_ANSWERED:
-                ShowIcon(3);
-                break;
-        }
-    }
-    public static States CharToState(char state)
+    public void SetState(char state)
     {
         if (state == 'l')
-            return States.QI_LOCKED;
-        else if (state == 'u')
-            return States.QI_ACTIVE;
+        {
+            UiButton.interactable = false;
+            ShowIcon(0);
+        }
+        else if (state == 'u'|| state =='a')
+        {
+            UiButton.interactable = true;
+            ShowIcon(1);
+        }
         else if (state == 'c')
-            return States.QI_CORRECTLY_ANSWERED;
+        {
+            ShowIcon(3);
+        }
         else if (state == 'w')
-            return States.QI_WRONGLY_ANSWERED;
-        else
-            return States.QI_LOCKED;
+        {
+            ShowIcon(2);
+        }
     }
     private GameObject GetIcon(int icon)
     {

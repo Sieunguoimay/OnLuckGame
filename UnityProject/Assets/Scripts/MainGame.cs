@@ -49,46 +49,30 @@ public class MainGame : MonoBehaviour
     public Button UiHintButton1;
     public Button UiHintButton2;
 
+    public GameObject UiImageSlideshow;
+    public GameObject UiImageItemTemplate;
+
     void Awake()
     {
         Utils.Instance.Init(this);
-        MainGamePresenter.Instance.Init(this);
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        UiImageItemTemplate.transform.parent = null;
         UiQuestionListPanel.SetActive(false);
         UiPopupPanel.SetActive(false);
         UiHintPopupPanel.SetActive(false);
-        UiPopupPanel.GetComponent<PopupManager>().m_answerPopupCallback = OnPopupPanelClosed;
-
         UiHintPriceText.transform.parent.gameObject.SetActive(false);
         UiHintPriceText2.transform.parent.gameObject.SetActive(false);
+        UiTimerText.GetComponent<CountdownTimer>().m_timeoutCallback += OnMQCQuestionTimeout;
+        UiPopupPanel.GetComponent<PopupManager>().m_answerPopupCallback = OnPopupPanelClosed;
+ 
+        m_mainGamePresenter = MainGamePresenter.Instance.Ready(this);
 
-        //ShowQuestionList();
-        m_mainGamePresenter = MainGamePresenter.Instance;
-
-
-        try
-        {
-            Debug.Log(UserDataMart.Instance.m_userData.name);
-
-            Texture2D texture = UserDataMart.Instance.m_userData.texProfilePicture;
-            UiUserNameText.text = UserDataMart.Instance.m_userData.name;
-            UiScoreText.text = UserDataMart.Instance.m_userData.score.ToString();
-            UiAvatarImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
-        }
-        catch (Exception e)
-        {
-            //do nothing babe
-        }
-
-
-        UiTimerText.GetComponent<CountdownTimer>().Reset(10).m_timeoutCallback += OnMQCQuestionTimeout;
-
-        //m_mainGamePresenter.InitWithTypingMode(QuestionDataMart.Instance.m_80QuestionPack, PlayingDataMart.Instance.m_questionImage80, PlayingDataMart.Instance.m_currentQuestionIndex80);
-        m_mainGamePresenter.Start();
+        gameObject.AddComponent<AudioSource>().PlayOneShot(AssetsDataMart.Instance.panelOpenAudioClip);
+        AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -96,7 +80,11 @@ public class MainGame : MonoBehaviour
     {
         
     }
-
+    void OnApplicationPause()
+    {
+        MenuPresenter.Instance.OnQuit();
+        MainGamePresenter.Instance.OnQuit();
+    }
 
     /*Event list goes here..*/
 
@@ -129,10 +117,6 @@ public class MainGame : MonoBehaviour
     }
     public void OnMainSceneBackButtonClicked()
     {
-        //UiTimerText.GetComponent<CountdownTimer>().Pause();
-
-
-
         if (m_mainGamePresenter.m_isPlayingInMCQNow)
         {
             AskForLeavingTimingQuestion((success) =>
@@ -141,7 +125,6 @@ public class MainGame : MonoBehaviour
                 {
                     Debug.Log("End game");
                     m_mainGamePresenter.Terminate();
-                    SceneManager.LoadScene("menu");
                 }
                 else
                 {
@@ -153,12 +136,19 @@ public class MainGame : MonoBehaviour
         {
             Debug.Log("End game");
             m_mainGamePresenter.Terminate();
-            SceneManager.LoadScene("menu");
         }
     }
     public void OnShareProgressButtonClicked()
     {
         Debug.Log("OnShareProgressButtonClicked");
+
+#if UNITY_ANDROID || UNITY_IOS
+        new NativeShare().SetText(AssetsDataMart.Instance.assetsData.base_url).Share();
+#endif
+    }
+    public void PlayAudio(AudioClip clip)
+    {
+        GetComponent<AudioSource>().PlayOneShot(clip);
     }
     public void OnShowQuestionListClicked()
     {
@@ -174,11 +164,14 @@ public class MainGame : MonoBehaviour
     }
     public void OnHintButtonClicked()
     {
-        m_mainGamePresenter.BuyHint();
+        if (!UiHintPopupPanel.activeSelf)
+            m_mainGamePresenter.BuyHint();
+        else
+            HideHintPanel();
     }
     public void OnSaveImageButtonClicked()
     {
-        m_mainGamePresenter.SaveImageOfTheCurrentQuestion();
+        m_mainGamePresenter.SaveImageOfTheCurrentQuestion(UiImageSlideshow.GetComponent<ImageSlideshow>().currentIndex);
     }
     public void OnAnswerButtonClicked()
     {
@@ -206,7 +199,7 @@ public class MainGame : MonoBehaviour
     {
         if (m_mainGamePresenter.IsLastQuestion() && m_mainGamePresenter.IsInMCQMode())
         {
-            ShowCongratePopup(m_mainGamePresenter.GetCurrentQuestionPackName());
+            ShowCongratePopup(m_mainGamePresenter.GetCurrentQuestionPackName(),PlayingDataMart.Instance.playingData.total_score);
         }
         if (status)
         {
@@ -225,7 +218,6 @@ public class MainGame : MonoBehaviour
     {
         Debug.Log("End game");
         m_mainGamePresenter.Terminate();
-        SceneManager.LoadScene("menu");
     }
     public void OnCloseHintPanelButtonClicked()
     {
@@ -242,18 +234,33 @@ public class MainGame : MonoBehaviour
 
     public void ShowQuestionListPanel()
     {
+        PlayAudio(AssetsDataMart.Instance.panelOpenAudioClip);
+
         UiQuestionListPanel.SetActive(true);
         ScrollList list = UiQuestionListPanel.GetComponent<ScrollList>();
         m_mainGamePresenter.LoadQuestionListIntoUiList(list);
 
-        HideQuestionPanel();
+        UiQuestionListPanel.GetComponent<Animator>().SetTrigger("show");
+        //HideQuestionPanel();
     }
     public void HideQuestionListPanel()
     {
-        UiQuestionListPanel.SetActive(false);
-        ShowQuestionPanel();
+        PlayAudio(AssetsDataMart.Instance.panelOpenAudioClip) ;
+        UiQuestionListPanel.GetComponent<Animator>().SetTrigger("hide");
+        HideObjectAfterAnimation(UiQuestionListPanel);
+        //UiQuestionListPanel.SetActive(false);
+        //ShowQuestionPanel();
     }
 
+    private void HideObjectAfterAnimation(GameObject gameObject)
+    {
+        StartCoroutine(hideObjectAfterAnimation(gameObject));
+    }
+    private IEnumerator hideObjectAfterAnimation(GameObject gameObject)
+    {
+        yield return new WaitForSeconds(gameObject.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length);
+        gameObject.SetActive(false);
+    }
     public void ShowQuestionPanel()
     {
         UiQuestionPanel.SetActive(true);
@@ -263,9 +270,9 @@ public class MainGame : MonoBehaviour
         UiQuestionPanel.SetActive(false);
     }
 
-    public void SetSeasonText(string text)
+    public void SetSeasonText(string name, int unlocked, int total)
     {
-        UiSeasonText.text = text;
+        UiSeasonText.text = name +"(" + unlocked + "/" + total + ")";
     }
     public void SetQuestionPackTitleText(string title)
     {
@@ -279,10 +286,21 @@ public class MainGame : MonoBehaviour
     {
         UiQuestionText.text = question;
     }
-    public void SetQuestionImage(Texture2D texture)
+    public void SetQuestionImages(List<QuestionDataMart.Image>images)
     {
-        if(texture!=null)
-            UiQuestionImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+        foreach (Transform child in UiImageSlideshow.transform)
+            Destroy(child.gameObject);
+
+
+        images.ForEach((image) =>
+        {
+            //Texture2D texture = image.sprite.texture;
+            GameObject newItem = Instantiate(UiImageItemTemplate) as GameObject;
+            newItem.GetComponent<Image>().sprite = image.sprite;// Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+            newItem.transform.SetParent(UiImageSlideshow.transform);
+        });
+        UiImageSlideshow.GetComponent<ImageSlideshow>().scrollbar.GetComponent<Scrollbar>().value = 0;
+        UiImageSlideshow.GetComponent<ImageSlideshow>().scroll_pos = 0;
     }
     public void SetPrevAnswer(string prevAnswer)
     {
@@ -306,38 +324,21 @@ public class MainGame : MonoBehaviour
         UiPopupPanel.GetComponent<PopupManager>().Hide();
         //UiPopupPanel.SetActive(false);
     }
-    //public void ShowAnswerResultPopupPanel(int state)
-    //{
-    //    answerResultState = state;
-    //    //UiPopupPanel.SetActive(true);
-    //    if (state == 0)
-    //    {
-    //        UiPopupPanel.GetComponent<PopupManager>().ShowCorrectAnswer();
-    //    }
-    //    else if(state == 1)
-    //    {
-    //        UiPopupPanel.GetComponent<PopupManager>().ShowWrongAnswer(m_mainGamePresenter.m_mode==MainGamePresenter.Modes.MCQ);
-    //    }
-    //    else if (state == 2)
-    //    {
-    //        //Show Congrate scene.
-
-    //    }
-    //}
+  
     private int answerResultState = 0;
-    public void ShowCorrectAnswer(string buttonText)
+    public void ShowCorrectAnswer(string buttonText, int score, int tobeAddedScore)
     {
-        UiPopupPanel.GetComponent<PopupManager>().ShowCorrectAnswer(buttonText);
+        UiPopupPanel.GetComponent<PopupManager>().ShowCorrectAnswer(buttonText,score, tobeAddedScore);
         answerResultState = 0;
     }
-    public void ShowWrongAnswer(string buttonText, string statusText)
+    public void ShowWrongAnswer(string buttonText, string statusText, int score )
     {
-        UiPopupPanel.GetComponent<PopupManager>().ShowWrongAnswer(buttonText, statusText);
+        UiPopupPanel.GetComponent<PopupManager>().ShowWrongAnswer(buttonText, statusText,score);
         answerResultState = 1;
     }
-    public void ShowCongratePopup(string questionPackName)
+    public void ShowCongratePopup(string questionPackName, int score)
     {
-        UiPopupPanel.GetComponent<PopupManager>().ShowCongratePopup(questionPackName);
+        UiPopupPanel.GetComponent<PopupManager>().ShowCongratePopup(questionPackName, score);
         answerResultState = 2;
     }
 
@@ -356,10 +357,13 @@ public class MainGame : MonoBehaviour
     {
         UiHintPopupPanel.SetActive(false);
     }
+    public void SetHintPriceActive(bool state)
+    {
+        UiHintPriceText.transform.parent.gameObject.SetActive(state);
+        UiHintPriceText2.transform.parent.gameObject.SetActive(state);
+    }
     public void SetHintPrice(int price)
     {
-        UiHintPriceText.transform.parent.gameObject.SetActive(true);
-        UiHintPriceText2.transform.parent.gameObject.SetActive(true);
         UiHintPriceText.text = "-" + price;
         UiHintPriceText2.text = "-" + price;
     }
@@ -375,7 +379,7 @@ public class MainGame : MonoBehaviour
                 item.SetWrongColor();
         }
     }
-    public void SetHintUtInteractable(bool state)
+    public void SetHintUiInteractable(bool state)
     {
         UiHintButton1.interactable = state;
         UiHintButton2.interactable = state;
@@ -390,7 +394,20 @@ public class MainGame : MonoBehaviour
     }
     public void SetUiNextButtonInteractable(bool status)
     {
-        UiNextButton.interactable = status;
+        //UiNextButton.interactable = status;
+        Debug.Log("SetUiNextButtonInteractable " + status);
+        if (status)
+            UiNextButton.GetComponent<Animator>().SetTrigger("show");
+        else
+            UiNextButton.GetComponent<Animator>().SetTrigger("hide");
+    }
+    public void SetUiPrevButtonInteractable(bool status)
+    {
+        //UiNextButton.interactable = status;
+        if (status)
+            UiPrevButton.GetComponent<Animator>().SetTrigger("show");
+        else
+            UiPrevButton.GetComponent<Animator>().SetTrigger("hide");
     }
     public void SetMCQChoices(string[] choices)
     {
@@ -421,6 +438,14 @@ public class MainGame : MonoBehaviour
     public void SetScore(int score)
     {
         UiScoreText.text = score.ToString();
+    }
+    public void SetAvatar(Texture2D texture)
+    {
+        UiAvatarImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+    }
+    public void SetUserName(string name)
+    {
+        UiUserNameText.text = name;
     }
     public delegate void AskForLeavingTimingQuestionCallback(bool success);
     public void AskForLeavingTimingQuestion(AskForLeavingTimingQuestionCallback callback)

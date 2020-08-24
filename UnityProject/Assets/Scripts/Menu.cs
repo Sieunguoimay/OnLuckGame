@@ -5,12 +5,14 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using Assets.Scripts;
 using Assets.Scripts.DataMarts;
+using Assets.Scripts.GameScene;
 
 
 public class Menu : MonoBehaviour
 {
     public GameObject UiLoginButtonPanel;
-    public GameObject UiPlayButton;
+    public GameObject UiLoginButtonContentPanel;
+    public GameObject UiQuestionPackItemPanel;
     public GameObject UiMenuPanel;
     public GameObject UiPopupPanelBackground;
     public GameObject UiPopupPanel;
@@ -33,15 +35,16 @@ public class Menu : MonoBehaviour
     public GameObject UiLogoutPanel;
     public Button UiUploadPhotoButton;
     public Button UiRenameButton;
+    public Text UiSeasonText;
 
     public GameObject UiVerificationPanel;
 
-    public GameObject UiGuidelinePanel;
-    public Text UiGuidelineTitleText;
-    public Text UiGuidelineContentText;
 
     public GameObject UiSplashScenePanel;
     public GameObject UiSplashSceneLogoPanel;
+    public ProgressBar UiProgressBar;
+    private bool hideSplashSceneLock;
+    private bool progressBarLock;
 
     public GameObject UiUserInfoBar;
     public Image UiAvatarImage;
@@ -50,6 +53,10 @@ public class Menu : MonoBehaviour
     public GameObject UiRenameInputField;
 
     public Image UiSoundButton;
+
+    public GameObject UiGuidelinePanel;
+    public Text UiGuidelineTitleText;
+    public Text UiGuidelineContentText;
 
     public GameObject UiScoreboardPanel;
     public GameObject UiScoreboardScrollList;
@@ -65,11 +72,22 @@ public class Menu : MonoBehaviour
     public Text UiStartupButtonText;
 
     public GameObject UiSpinner;
+
+    public PopupPanel UiAskForPermissionPopupPanel;
+    public Button UiAskForPermissionButton;
+    public Text UiAskForPermissionText;
+
+    public Text UiQuoteText;
+
     void Awake()
     {
         Debug.Log("Menu Awake");
         Utils.Instance.Init(this);
+        Main.Instance.Init(this);
         UiSpinner.SetActive(false);
+
+        //signal this on returning from MainGameScene
+        MainGamePresenter.Instance.outputPlayingDataNeuron.inputs[1].Signal();
     }
 
     // Start is called before the first frame update
@@ -87,46 +105,57 @@ public class Menu : MonoBehaviour
         UiGuidelinePanel.SetActive(false);
         UiSplashScenePanel.SetActive(false);
         UiVerificationPanel.SetActive(false);
-        UiPlayButton.SetActive(false);
+        UiQuestionPackItemPanel.SetActive(false);
         UiRenameInputField.SetActive(false);
         UiScoreboardPanel.SetActive(false);
         UiProfileMenuButtonList.SetActive(false);
         UiProfileMenuGuessText.SetActive(false);
 
-        Debug.Log("Menu Start 1");
+        UiRenameInputField.GetComponent<EnterKeyEvent>().eventCallback = () => OnRenameInputFieldEndEdit(UiRenameInputField.GetComponentInChildren<Text>().text);
+        //UiProgressBar.value = 0;
+        hideSplashSceneLock = true;
+        progressBarLock = false;
+
 
         m_menuPresenter = MenuPresenter.Instance.Init(this);
+
+        gameObject.AddComponent<AudioSource>();
+        AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
         Debug.Log("Menu Started");
     }
-
-    // Update is called once per frame
-    void Update()
+    void OnApplicationPause()
     {
+        m_menuPresenter.OnQuit();
     }
 
     public void OnLoginButtonClicked()
     {
-        Debug.Log("onLoginButtonClicked");
         ShowPopupPanel(0);
     }
 
     public void OnFBLoginButtonClicked()
     {
-        Debug.Log("onFBLoginButtonClicked");
         m_menuPresenter.SignInWithFB();
     }
 
     public void OnSignupButtonClicked()
     {
-        Debug.Log("onSignupButtonClicked");
+        ShowPopupPanel(1);
+        IsNormalSignup = true;
+    }
+    private bool IsNormalSignup = true;
+    public delegate void ShowSignupPanelWithPredataCallback(string userName,string email, string password);
+    private ShowSignupPanelWithPredataCallback showSignupPanelWithPredataCallback = null;
+    public void ShowSignupPanelWithPredata(string name,string email, ShowSignupPanelWithPredataCallback callback)
+    {
+        IsNormalSignup = false;
+        showSignupPanelWithPredataCallback = callback;
+        SetSignupStatusText(AssetsDataMart.Instance.assetsData.strings.enter_new_password);
+        UiSignupNameInputField.text = name;
+        UiSignupEmailInputField.text = email;
         ShowPopupPanel(1);
     }
 
-    //public void OnDonateButtonClicked()
-    //{
-    //    Debug.Log("onDonateButtonClicked");
-    //    ShowPopupPanel(2);
-    //}
     public void OnSoundButtonClicked()
     {
         Debug.Log("OnSoundButtonClicked");
@@ -140,7 +169,7 @@ public class Menu : MonoBehaviour
     public void OnGuidelineButtonClicked()
     {
         Debug.Log("OnGuidelineButtonClicked");
-        ShowGuidelinePanel(AssetsDataMart.Instance.guidelineTitles[0], AssetsDataMart.Instance.guidelines[0]);
+        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.guideline, QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
         //ShowPopupPanel(5);
     }
     public void OnScoreboardButtonClicked()
@@ -154,7 +183,7 @@ public class Menu : MonoBehaviour
     {
         Debug.Log("OnIntroButtonClicked");
         //ShowPopupPanel(7);
-        ShowGuidelinePanel(AssetsDataMart.Instance.guidelineTitles[1], AssetsDataMart.Instance.guidelines[1]);
+        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.intro, QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
     }
 
     public void OnClosePupupButtonClicked()
@@ -176,19 +205,28 @@ public class Menu : MonoBehaviour
     public void OnSignupSubmitButtonClicked()
     {
         Debug.Log("OnSignupSubmitButtonClicked: " + UiEmailInputField.text + " " + UiPasswordInputField.text);
-
-        //Check for the authorization stuff. and then go back to the main menu with LoginButtonPanel been removed.
-        if(m_menuPresenter.Signup(UiSignupNameInputField.text, UiSignupEmailInputField.text, UiSignupPasswordInputField.text))
+        if (!IsNormalSignup)
         {
-            UiSignupNameInputField.text = "";
-            UiSignupEmailInputField.text = "";
-            UiSignupPasswordInputField.text = "";
+            showSignupPanelWithPredataCallback(UiSignupNameInputField.text, UiSignupEmailInputField.text, UiSignupPasswordInputField.text);
+        }
+        else
+        {
+            //Check for the authorization stuff. and then go back to the main menu with LoginButtonPanel been removed.
+            if (m_menuPresenter.Signup(UiSignupNameInputField.text, UiSignupEmailInputField.text, UiSignupPasswordInputField.text))
+            {
+                UiSignupNameInputField.text = "";
+                UiSignupEmailInputField.text = "";
+                UiSignupPasswordInputField.text = "";
+            }
         }
     }
 
     public void OnOpenEmailButtonClicked()
     {
         Debug.Log("OnOpenEmailButtonClicked:Openning email");
+
+        Application.OpenURL("https://www.google.com/search?query=email");
+
     }
     public void OnVerificationOkButtonClicked()
     {
@@ -226,15 +264,20 @@ public class Menu : MonoBehaviour
         });
     }
 
+    public void OnQuotePanelClicked()
+    {
+        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.qoute_popup_title, UiQuoteText.text);
+    }
+
     public void ToggleUiAccordingToLoginState(bool state)
     {
-        if (UiPlayButton.activeSelf != state)
+        if (UiQuestionPackItemPanel.activeSelf != state)
         {
             Debug.Log("ToggleUiAccordingToLoginState " + state);
 
             UiLoginButtonPanel.SetActive(!state);
             ToggleUserInfoBar(state);
-            UiPlayButton.SetActive(state);
+            UiQuestionPackItemPanel.SetActive(state);
         }
     }
 
@@ -242,14 +285,10 @@ public class Menu : MonoBehaviour
     {
         if (state)
         {
-            //UiUserInfoBar.SetActive(state);
-            //UiUserInfoBar.GetComponent<Animator>()?.SetTrigger("show");
         }else
         {
-            //StartCoroutine(hideUserInfoBar());
-            //Load default
             UiAvatarImage.sprite = AssetsDataMart.Instance.defaultProfilePictureSprite;
-            UiUserNameText.text = "Guess";
+            UiUserNameText.text = AssetsDataMart.Instance.assetsData.strings.user_name;
             UiScoreText.text = 0.ToString();
         }
     }
@@ -325,28 +364,39 @@ public class Menu : MonoBehaviour
         }
         return null;
     }
-    public void ToggleSplashScene(bool state)
+    public void ShowAutoHideSplashScene()
     {
-        UiSplashScenePanel.SetActive(state);
-        if (state)
-        {
-            StartCoroutine(hideSplashSceneOnAnimationEnd());
-        }
+        UiSplashScenePanel.SetActive(true);
+        StartCoroutine(hideSplashSceneOnAnimationEnd());
     }
     private IEnumerator hideSplashSceneOnAnimationEnd()
     {
         Debug.Log("Animating Splash Scene Logo");
         yield return new WaitForSeconds(UiSplashSceneLogoPanel.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length);
-
+        if (hideSplashSceneLock)
+            hideSplashSceneLock = false;
+        else
+            StartCoroutine(hideSplashScenePanel());
+    }
+    private IEnumerator hideSplashScenePanel()
+    {
         Animator splashAnimator = UiSplashScenePanel.GetComponent<Animator>();
         if (splashAnimator != null)
         {
             splashAnimator.SetBool("hide", true);
-            //float duration = splashAnimator.GetCurrentAnimatorClipInfo(0)[0].clip.length;
             yield return new WaitForSeconds(0.5f);
         }
         UiSplashScenePanel.SetActive(false);
         Debug.Log("Splash scene is gone");
+
+    }
+    public void ShowSplashScene()
+    {
+        UiSplashScenePanel.SetActive(true);
+    }
+    public void HideSplashScene()
+    {
+        StartCoroutine(hideSplashScenePanel());
     }
 
     public void SetUserName(string name)
@@ -373,6 +423,10 @@ public class Menu : MonoBehaviour
     {
         UiLoginStatusText.text = status;
     }
+    public void SetSeasonText(string season)
+    {
+        UiSeasonText.text = season;
+    }
     public void SetSignupStatusText(string status)
     {
         UiSignupStatusText.text = status;
@@ -385,12 +439,7 @@ public class Menu : MonoBehaviour
     }
     public void OnAvatarButtonClicked()
     {
-        //UiLogoutPanel.SetActive(!UiLogoutPanel.activeSelf);
-        //if (UiLogoutPanel.activeSelf)
-        //{
-        //    UiUploadPhotoButton.interactable = m_menuPresenter.m_IsNormalLogin;
-        //    UiRenameButton.interactable = m_menuPresenter.m_IsNormalLogin;
-        //}
+
         UiProfileMenuButtonList.SetActive(!UiProfileMenuButtonList.activeSelf);
         if(UiProfileMenuButtonList.activeSelf)
            SetProfileButtonItemList(m_menuPresenter.m_loginState);
@@ -399,11 +448,19 @@ public class Menu : MonoBehaviour
     public void OnRenameInputFieldEndEdit(string text)
     {
         string t = UiRenameInputField.GetComponent<InputField>().text;
-        m_menuPresenter.Rename(t);
-        UiRenameInputField.SetActive(false);
-        Debug.Log("Hey: "+t);
+        m_menuPresenter.Rename(t,(status)=>
+        {
+            UiRenameInputField.GetComponent<InputField>().Select();
+            UiRenameInputField.GetComponent<InputField>().text = "";
+            UiRenameInputField.SetActive(false);
+        });
     }
-
+    public void OnCancelRenameButtonClicked()
+    {
+        UiRenameInputField.SetActive(false);
+        UiRenameInputField.GetComponent<InputField>().Select();
+        UiRenameInputField.GetComponent<InputField>().text = "";
+    }
     public void ToggleSoundButtonUi(bool state)
     {
         if (state)
@@ -433,11 +490,17 @@ public class Menu : MonoBehaviour
     }
     public void SetSpinnerTo(GameObject parent)
     {
+        //foreach (Transform child in parent.transform)
+        //    child.gameObject.SetActive(false);
         UiSpinner.transform.SetParent(parent.transform);
+        UiSpinner.transform.localPosition = Vector2.zero;
         UiSpinner.SetActive(true);
     }
     public void HideSpinner()
     {
+        //foreach (Transform child in UiSpinner.transform.parent.transform)
+        //    child.gameObject.SetActive(true);
+
         UiSpinner.transform.SetParent(transform);
         UiSpinner.SetActive(false);
         getPanelById(m_currentPanelId).SetActive(true);
@@ -451,6 +514,21 @@ public class Menu : MonoBehaviour
     {
         UiSpinner.SetActive(true);
     }
+    public void ToggleSpinnerAtLoginButtonPanel(bool state)
+    {
+        Debug.Log("ToggleSpinnerAtLoginButtonPanel " + state);
+        if (state)
+        {
+            SetSpinnerTo(UiLoginButtonContentPanel.transform.parent.gameObject);
+            UiLoginButtonContentPanel.SetActive(false);
+        }
+        else
+        {
+            UiLoginButtonContentPanel.SetActive(true);
+            UiSpinner.transform.SetParent(transform);
+            UiSpinner.SetActive(false);
+        }
+    }
     public void ShowGuidelinePanel(string title, string content)
     {
         ShowPopupPanel(5);
@@ -458,34 +536,44 @@ public class Menu : MonoBehaviour
         UiGuidelineContentText.text = content;
     }
 
-    private string[] profileMenuButtonNames = { "Thay anh moi", "Sua ten", "Dang xuat" };
-    public void SetProfileButtonItemList(MenuPresenter.LoginStates state)
+    public void SetProfileButtonItemList(bool state)
     {
+        string[] profileMenuButtonNames = { 
+            AssetsDataMart.Instance.assetsData.strings.upload_photo,
+            AssetsDataMart.Instance.assetsData.strings.rename,
+            AssetsDataMart.Instance.assetsData.strings.logout};
         UiProfileMenuGuessText.SetActive(false);
-        if (state == MenuPresenter.LoginStates.LOGGED_IN)
+        if (state)
         {
-            UiProfileMenuButtonList.GetComponent<ScrollList>().CreateList<Button>(3, (item, index) =>
+            if (!UserDataMart.Instance.m_userData.active_vendor.Equals("sieunguoimay"))
             {
-                item.GetComponentInChildren<Text>().text = profileMenuButtonNames[index];
-            });
-        }
-        else if(state == MenuPresenter.LoginStates.LOGGED_IN_WITH_FB)
-        {
-            UiProfileMenuButtonList.GetComponent<ScrollList>().CreateList<Button>(1, (item, index) =>
+                UiProfileMenuButtonList.GetComponentInChildren<ScrollList>().CreateList(1, (item, index) =>
+                {
+                    IntegerCarrier integerCarrier =  item.AddComponent(typeof(IntegerCarrier)) as IntegerCarrier;
+                    integerCarrier.integer = 2;
+                    item.GetComponentInChildren<Text>().text = profileMenuButtonNames[2];
+                });
+            }
+            else
             {
-                item.GetComponentInChildren<Text>().text = profileMenuButtonNames[2];
-            });
+                UiProfileMenuButtonList.GetComponentInChildren<ScrollList>().CreateList(3, (item, index) =>
+                {
+                    IntegerCarrier integerCarrier = item.AddComponent(typeof(IntegerCarrier)) as IntegerCarrier;
+                    integerCarrier.integer = index;
+                    item.GetComponentInChildren<Text>().text = profileMenuButtonNames[index];
+                });
+            }
         }
         else
         {
-            UiProfileMenuButtonList.GetComponent<ScrollList>().Clear();
+            UiProfileMenuButtonList.GetComponentInChildren<ScrollList>().Clear();
             UiProfileMenuGuessText.SetActive(true);
         }
     }
     public void OnProfileButtonItemClicked()
     {
-        string buttonName = EventSystem.current.currentSelectedGameObject.GetComponentInChildren<Text>().text;
-        if (buttonName.Equals(profileMenuButtonNames[0]))
+        int index = EventSystem.current.currentSelectedGameObject.GetComponent<IntegerCarrier>().integer;
+        if (index == 0)
         {
             Debug.Log("Upload Photo");
             LocalProvider.Instance.BrowseImagePath((path) => {
@@ -493,7 +581,7 @@ public class Menu : MonoBehaviour
                     m_menuPresenter.UploadProfilePicture(path);
             });
         }
-        else if (buttonName.Equals(profileMenuButtonNames[1]))
+        else if (index == 1)
         {
             Debug.Log("Rename");
             UiRenameInputField.SetActive(true);
@@ -502,12 +590,61 @@ public class Menu : MonoBehaviour
             input.ActivateInputField();
             UiLogoutPanel.SetActive(false);
         }
-        else if (buttonName.Equals(profileMenuButtonNames[2]))
+        else if (index == 2)
         {
             Debug.Log("Logout");
             m_menuPresenter.Logout();
             UiLogoutPanel.SetActive(false);
         }
         UiProfileMenuButtonList.SetActive(false);
+    }
+
+
+    public delegate void AskForPermissionCallback();
+    public AskForPermissionCallback askForPermissionCallback = null;
+    public AskForPermissionCallback checkYourNetworkCallback = null;
+    private int permissinPopupMode = -1;
+    public void SetUpAskForPermissionPopup(AskForPermissionCallback callback)
+    {
+        askForPermissionCallback = callback;
+        UiAskForPermissionButton.onClick.AddListener(() =>
+        {
+            if (permissinPopupMode == 0) 
+                askForPermissionCallback();
+            else if (permissinPopupMode == 1)
+                checkYourNetworkCallback();
+            UiAskForPermissionPopupPanel.Hide();
+        });
+    }
+    public void SetUpCheckYourNetwork(AskForPermissionCallback callback)
+    {
+        checkYourNetworkCallback = callback;
+    }
+    public void ShowPopupToAskForPermission()
+    {
+        permissinPopupMode = 0;
+        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.assetsData.strings.download;
+        //"TAI XUONG";
+        UiAskForPermissionText.text = AssetsDataMart.Instance.assetsData.strings.new_game_data_available;
+        //"Da co du lieu moi cho game. Vui long tai xuong!";
+        UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
+    }
+    public void ShowPopupCheckYourNetwork()
+    {
+        permissinPopupMode = 1;
+        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.assetsData.strings.try_again;
+        //"THU LAI";
+        UiAskForPermissionText.text = AssetsDataMart.Instance.assetsData.strings.no_internet;
+        //"Khong co internet!";
+        UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
+    }
+
+    public void SetProgressBar(float value)
+    {
+        UiProgressBar.SlideTo(value);
+    }
+    public void SetQuoteText(string quote)
+    {
+        UiQuoteText.text = quote;
     }
 }

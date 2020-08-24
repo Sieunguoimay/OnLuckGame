@@ -48,7 +48,7 @@ public class FBLogin /*: MonoBehaviour*/
     public FBLoginCallback m_fbLoginCallback;
 
 
-    public void Init()
+    public void Init(FBSignInCallback callback)
     {
         if (FB.IsInitialized)
         {
@@ -56,18 +56,25 @@ public class FBLogin /*: MonoBehaviour*/
         }
         else
         {
-            FB.Init(InitCallback, OnHideUnity);
+            FB.Init(()=>InitCallback(callback), OnHideUnity);
         }
     }
-	private void InitCallback(){
+	private void InitCallback(FBSignInCallback callback){
 		if(FB.IsInitialized){
 			FB.ActivateApp();
 			Debug.Log("Initialized the Facebook SDK. Continue here..");
+            if (FB.IsLoggedIn)
+            {
+                m_fbAccessToken = Facebook.Unity.AccessToken.CurrentAccessToken;
+            }
+            callback(FB.IsLoggedIn);
         }
-        else{
+        else
+        {
 			Debug.Log("Failed to Initialized the Facebook SDK");
-		}
-	}
+            callback(false);
+        }
+    }
 	private void OnHideUnity(bool isGameShown){
         Debug.Log("HEY");
 		if(!isGameShown){
@@ -79,18 +86,21 @@ public class FBLogin /*: MonoBehaviour*/
 		}
 	}
 
-
-
+    public bool IsLoggedIn()
+    {
+        return FB.IsLoggedIn;
+    }
     //Called to login to facebook,
     //Signal out for the result.
-    public delegate void FBSignInCallback();
+    public delegate void FBSignInCallback(bool status);
     public void SignIn(FBSignInCallback callback)
     {
         var permissions = new List<string>() { "public_profile", "email" };
         FB.LogInWithReadPermissions(permissions, (result)=>{
             if (FB.IsLoggedIn)
             {
-                m_fbAccessToken = Facebook.Unity.AccessToken.CurrentAccessToken;
+                m_fbAccessToken = // Facebook.Unity.AccessToken.CurrentAccessToken;
+                result.AccessToken;
 
                 Debug.Log(m_fbAccessToken.UserId);
                 foreach (string permission in m_fbAccessToken.Permissions)
@@ -100,12 +110,13 @@ public class FBLogin /*: MonoBehaviour*/
                 /*Goto Main Menu*/
 
                 //m_fbLoginCallback(true);
-                callback();
+                callback(true);
             }
             else
             {
                 Debug.Log("User Cancelled login");
                 //m_fbLoginCallback(false);
+                callback(false);
             }
         });
     }
@@ -205,17 +216,17 @@ public class FBLogin /*: MonoBehaviour*/
     //    });
     //}
 
-    public delegate void FBUserDataCallback(FBUserInfo data);
-    public void GetFBUserData(FBUserDataCallback callback)
-    {
-        SignIn(() => {
-            FetchFBUserInfo((userInfo) => {
-                FetchFBProfilePicture((profilePicture) => {
-                    userInfo.avatar = profilePicture;
-                    callback(userInfo);
-                });
-            });
-        });
+    //public delegate void FBUserDataCallback(FBUserInfo data);
+    //public void GetFBUserData(FBUserDataCallback callback)
+    //{
+        //SignIn(() => {
+        //    FetchFBUserInfo((userInfo) => {
+        //        FetchFBProfilePicture((profilePicture) => {
+        //            userInfo.avatar = profilePicture;
+        //            callback(userInfo);
+        //        });
+        //    });
+        //});
         //if (FB.IsLoggedIn){
         //    FetchFBUserInfo((userInfo)=> {
         //        FetchFBProfilePicture((profilePicture) =>{
@@ -234,19 +245,19 @@ public class FBLogin /*: MonoBehaviour*/
         //        });
         //    });
         //}
-    }
-    public void GetFBUserDataIfLoggedIn(FBUserDataCallback callback)
-    {
-        if (FB.IsLoggedIn)
-        {
-            FetchFBUserInfo((userInfo) => {
-                FetchFBProfilePicture((profilePicture) => {
-                    userInfo.avatar = profilePicture;
-                    callback(userInfo);
-                });
-            });
-        }
-    }
+    //}
+    //public void GetFBUserDataIfLoggedIn(FBUserDataCallback callback)
+    //{
+    //    if (FB.IsLoggedIn)
+    //    {
+    //        FetchFBUserInfo((userInfo) => {
+    //            FetchFBProfilePicture((profilePicture) => {
+    //                userInfo.avatar = profilePicture;
+    //                callback(userInfo);
+    //            });
+    //        });
+    //    }
+    //}
 
     public void ShareWithFriends()
     {

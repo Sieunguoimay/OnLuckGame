@@ -14,19 +14,18 @@ namespace Assets.Scripts
 
         private static MenuPresenter s_instance = null;
 
-        public enum LoginStates
-        {
-            NOT_LOGGED_IN,
-            LOGGED_IN,
-            LOGGED_IN_WITH_FB,
-        }
+        //public enum LoginStates
+        //{
+        //    NOT_LOGGED_IN,
+        //    LOGGED_IN,
+        //    LOGGED_IN_WITH_FB,
+        //}
 
         private Menu rMenu;
         //public UserData m_userData { get; private set; }
         //private bool m_loginState;
         private bool m_firstTime;
-        public bool m_isSoundOn;
-        public LoginStates m_loginState;
+        public bool m_loginState;
         private string m_cachedEmail;
         private string m_cachedPassword;
         private bool m_shouldRefreshScoreboard;
@@ -35,8 +34,7 @@ namespace Assets.Scripts
             //m_userData = new UserData();
             //m_loginState = false;
             m_firstTime = true;
-            m_isSoundOn = true;
-            m_loginState = LoginStates.NOT_LOGGED_IN;
+            m_loginState = false;// LoginStates.NOT_LOGGED_IN;
 
             //Utils.Instance.GetRequest("localhost:8000/api/onluck");
 
@@ -53,37 +51,48 @@ namespace Assets.Scripts
                 return s_instance;
             }
         }
-
+        private Utils.Neuron hideSplashSceneNeuron;
         public MenuPresenter Init(Menu menu)
         {
             this.rMenu = menu;
-            //Utils.Instance.GetRequest("localhost:8000/api/onluck/login?email=phamthuyduong@gmail.com&password=nguoiyeu"
-            //    ,(response)=>{
-            //        Debug.Log(response);
-            //    });
 
             m_shouldRefreshScoreboard = true;
 
             if (m_firstTime)
             {
                 m_firstTime = false;
-                rMenu.ToggleSplashScene(true);
+                rMenu.ShowSplashScene();
 
                 if (UserDataMart.Instance.m_isUserDataValid)
                 {
+                    OnLoggedIn();
                     UpdateMenuUiWithUserData();
                 }
-                else
-                {
-                    UserDataMart.Instance.m_notifyToRefreshCallback += UpdateMenuUiWithUserData;
-                    UserDataMart.Instance.m_userDataReadyCallback += UpdateMenuUiWithUserData;
-                    UserDataMart.Instance.m_userDataReadyCallback += OnLoggedIn;
-                }
+
+                UserDataMart.Instance.m_notifyToRefreshCallback += UpdateMenuUiWithUserData;
+                UserDataMart.Instance.m_userDataFromServerReadyCallback += UpdateMenuUiWithUserData;
+                UserDataMart.Instance.m_userDataFromServerReadyCallback += OnLoggedIn;
+
+                QuestionDataMart.Instance.progressPublisher.progressListener += (value) => rMenu.SetProgressBar(value);
+                QuestionDataMart.Instance.m_askForPermissionCallback += ()=> rMenu.ShowPopupToAskForPermission();
+
+                //QuestionDataMart.Instance.m_gameDataReadyCallback += () => ;
+                hideSplashSceneNeuron = new Utils.Neuron(2);
+                hideSplashSceneNeuron.output = () => rMenu.HideSplashScene();
+                QuestionDataMart.Instance.m_gameDataReadyCallback += ()=>UpdateMenuUiOnQuestionDataLoaded();
+                QuestionDataMart.Instance.m_gameDataCompletedCallback += ()=> { showQuestionPacks(); hideSplashSceneNeuron.inputs[0].Signal(); } ;
+                rMenu.UiProgressBar.DoneCallback = () => { hideSplashSceneNeuron.inputs[1].Signal(); };
+                Utils.Instance.networkErrorCallback += () => { Debug.Log("No Internet!!"); rMenu.ShowPopupCheckYourNetwork(); };
+                LoginLogic.Instance.fbLoginCallback += (status) => rMenu.ToggleSpinnerAtLoginButtonPanel(status);
+                LoginLogic.Instance.fbLoginDoneCallback += (status) => rMenu.ToggleSpinnerAtLoginButtonPanel(false);
             }
             else
             {
                 UpdateMenuUiWithUserData();
+                UpdateMenuUiOnQuestionDataLoaded();
             }
+            rMenu.SetUpAskForPermissionPopup(QuestionDataMart.Instance.OnPermissionGranted);
+            rMenu.SetUpCheckYourNetwork(() => { Debug.Log("Refresh the game"); Main.Instance.Reset(); });
             rMenu.ToggleUiAccordingToLoginState(UserDataMart.Instance.m_isUserDataValid);
             Debug.Log("MenuPresenter Initialized");
             return this;
@@ -96,18 +105,23 @@ namespace Assets.Scripts
             HttpClient.Instance.LogIn(m_cachedEmail, m_cachedPassword, (response) => {
                 if (response.status.Equals("OK"))
                 {
-                    onHttpClientLoginResult(response.data);
+                    Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
+                    LoginLogic.Instance.userDataFromServerCallback(response.data.user_data);
+                    UserDataMart.Instance.NotifyDataFromServerValid();
                 }
                 else
                 {
                     rMenu.ToggleUiAccordingToLoginState(UserDataMart.Instance.m_isUserDataValid);
-                    rMenu.HidePopupPanel();
                 }
                 rMenu.HideSpinner();
+                rMenu.HidePopupPanel();
+            }, (response) =>
+            {
+                rMenu.HideSpinner();
+                rMenu.HidePopupPanel();
             });
         }
-
-        public bool LogIn(string email, string password)
+    public bool LogIn(string email, string password)
         {
             if (email.Equals("") || password.Equals("")) { 
                 rMenu.SetLoginStatusText("Missing email or password");
@@ -117,22 +131,40 @@ namespace Assets.Scripts
             m_cachedEmail = email;
             m_cachedPassword = password;
             rMenu.ShowSpinnerAtPopupPanel();
-            HttpClient.Instance.LogIn(email, password, (response) => {
+            HttpClient.Instance.LogIn(email, password,(response) =>
+            {
                 if (response.status.Equals("OK"))
                 {
-                    onHttpClientLoginResult(response.data);
-                }else if(response.status.Equals("email_not_verified"))
+                    //onHttpClientLoginResult(response.data);
+                    Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
+                    LoginLogic.Instance.userDataFromServerCallback(response.data.user_data);
+                    UserDataMart.Instance.NotifyDataFromServerValid();
+                    rMenu.HidePopupPanel();
+                }
+                else if (response.status.Equals("email_not_verified"))
                 {
                     rMenu.ShowVerificationPanel();
-                }else
+                }
+                else
                 {
                     rMenu.SetLoginStatusText(response.status);
                 }
                 rMenu.HideSpinner();
+            }, (response) =>
+            {
+                string fbUserName = response.data.name;
+                string fbProfilePicture = response.data.profile_picture;
+
+                rMenu.ShowSignupPanelWithPredata(fbUserName, email, (signupUserName, signupEmail, signupPassword) => {
+                    Signup(signupUserName, signupEmail, signupPassword,fbProfilePicture);
+                });
+                rMenu.HideSpinner();
             });
+
+
             return true;
         }
-        public bool Signup(string userName, string email, string password)
+        public bool Signup(string userName, string email, string password,string profilepicture = "")
         {
             if (email.Equals("") || password.Equals(""))
             {
@@ -149,10 +181,14 @@ namespace Assets.Scripts
             m_cachedEmail = email;
             m_cachedPassword = password;
             rMenu.ShowSpinnerAtPopupPanel();
-            HttpClient.Instance.SignUp(userName, email, password, (response) => {
+            HttpClient.Instance.SignUp(userName, email, password, profilepicture, (response) => {
                 if (response.status.Equals("OK"))
                 {
-                    onHttpClientLoginResult(response.data);
+                    //onHttpClientLoginResult(response.data);
+                    Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
+                    LoginLogic.Instance.userDataFromServerCallback(response.data.user_data);
+                    UserDataMart.Instance.NotifyDataFromServerValid();
+                    rMenu.HidePopupPanel();
                 }
                 else if (response.status.Equals("email_not_verified"))
                 {
@@ -166,158 +202,38 @@ namespace Assets.Scripts
             });
             return true;
         }
-        private void onHttpClientLoginResult(HttpClient.LogInResponseData result)
-        {
-            int id = result.user_id;
-            UserDataMart.Instance.m_userData.id = id;
-            UserDataMart.Instance.m_userData.name = result.user_name;
-            UserDataMart.Instance.m_userData.email = m_cachedEmail;
-            UserDataMart.Instance.m_userData.profilePicture = HttpClient.Instance.BaseUrl + result.profile_picture;
-            UserDataMart.Instance.m_userData.score = result.score;
-            UserDataMart.Instance.m_userData.activeVendor = result.active_vendor;
 
-            Utils.Instance.LoadImage(UserDataMart.Instance.m_userData.profilePicture, (texture) =>
-            {
-                UserDataMart.Instance.m_userData.texProfilePicture = texture;
-                //rMenu.SetAvatar(UserDataMart.Instance.m_userData.texProfilePicture);
-                UserDataMart.Instance.NotifyDataValid();
-            });
-
-            UserDataMart.Instance.NotifyNewData();
-
-            //updateMenuUiWithUserData();
-            //m_loginState = true;
-            m_loginState = LoginStates.LOGGED_IN;
-            rMenu.HidePopupPanel();
-            Debug.Log(UserDataMart.Instance.m_userData.profilePicture);
-        }
         public void SignInWithFB()
         {
-            //facebookLogin.SignIn(OnFBSignedIn);
-
-            FBLogin.Instance.GetFBUserData((fbUserData)=>{
-                
-                UserDataMart.Instance.m_userData.name = fbUserData.name;
-                UserDataMart.Instance.m_userData.email = fbUserData.email;
-                UserDataMart.Instance.m_userData.texProfilePicture = fbUserData.avatar;
-                UserDataMart.Instance.NotifyDataValid();
-
-                HttpClient.Instance.SignIn(
-                    UserDataMart.Instance.m_userData.name,
-                    UserDataMart.Instance.m_userData.email,
-                    UserDataMart.Instance.m_userData.texProfilePicture.EncodeToPNG(), (response) =>{
-                        if (response.status.Equals("OK")){
-                            UserDataMart.Instance.m_userData.id = response.data.user_id;
-                            UserDataMart.Instance.m_userData.score = response.data.score;
-                            UserDataMart.Instance.m_userData.activeVendor = response.data.active_vendor;
-                            //rMenu.SetScore(UserDataMart.Instance.m_userData.score);
-                            PlayingDataMart.Instance.m_score = UserDataMart.Instance.m_userData.score;
-
-                            if (response.data.has_profile_picture)
-                            {
-                                UserDataMart.Instance.m_userData.profilePicture = response.data.profile_picture;
-                            }
-                            UserDataMart.Instance.NotifyNewData();
-                            m_loginState = LoginStates.LOGGED_IN_WITH_FB;
-                        }
-                    }, (response) =>{
-                        if (response.status.Equals("OK"))
-                        {
-                            UserDataMart.Instance.m_userData.profilePicture = response.data.profile_picture;
-                            UserDataMart.Instance.NotifyNewData();
-                            m_loginState = LoginStates.LOGGED_IN_WITH_FB;
-                        }
-                    });
+            FBLogin.Instance.SignIn(LoginLogic.Instance.fbLoginCallback);
+        }
+        private void showQuestionPacks()
+        {
+            rMenu.SetQuestionPacks(QuestionDataMart.Instance.packs.Count, (item, index) =>
+            {
+                item.SetIcon(QuestionDataMart.Instance.packs[index].icon.sprite);
+                item.SetTitle(QuestionDataMart.Instance.packs[index].title);
+                item.SetSubText(QuestionDataMart.Instance.packs[index].sub_text);
+                item.Index = index;
             });
         }
-
-        //public int OnFBSignedIn(bool result)
-        //{
-        //    if (result)
-        //    {
-        //        Debug.Log("Logged in to facebook babe: " + m_loginState);
-        //        m_loginState = true;
-        //        m_IsNormalLogin = false;
-        //        rMenu.ToggleUiAccordingToLoginState(m_loginState);
-
-        //        facebookLogin.FetchFBUserInfo((fbUserInfo)=> {
-        //            m_userData.name = fbUserInfo.name;
-        //            m_userData.email = fbUserInfo.email;
-        //            rMenu.SetUserName(m_userData.name);
-
-        //            facebookLogin.FetchFBProfilePicture((profilePicture) => {
-        //                //m_userData.avatar = profilePicture;
-        //                rMenu.SetAvatar(profilePicture);
-        //                m_userData.texProfilePicture = profilePicture.texture;
-        //                //notify the server to signin
-        //                HttpClient.Instance.SignIn(m_userData.name, m_userData.email, m_userData.texProfilePicture.EncodeToPNG(),(response)=> {
-        //                    if (response.status.Equals("OK"))
-        //                    {
-        //                        m_userData.id = response.data.user_id;
-        //                        m_userData.score = response.data.score;
-        //                        m_userData.activeVendor = response.data.active_vendor;
-        //                        rMenu.SetScore(m_userData.score);
-
-        //                        if (response.data.has_profile_picture)
-        //                        {
-        //                            m_userData.profilePicture = response.data.profile_picture;
-        //                        }
-        //                    }
-        //                },(response)=> {
-        //                    if (response.status.Equals("OK"))
-        //                    {
-        //                        m_userData.profilePicture = response.data.profile_picture;
-        //                    }
-        //                });
-        //            });
-
-        //        });
-        //    }
-        //    else
-        //    {
-        //        m_loginState = false;
-        //        Debug.Log("Not logged in to facebook yet");
-        //    }
-        //    return 0;
-        //}
-
-        //public int OnFBUserDataFetched(FBUserData userData)
-        //{
-        //    if(m_fbUserData.what == -1)
-        //    {
-        //        m_fbUserData.what = userData.what;
-        //    }else
-        //    {
-        //        m_fbUserData.what = 2;
-        //    }
-
-        //    if (userData.what == 0)
-        //    {
-        //        m_fbUserData.name = userData.name;
-        //    }else if(userData.what == 1)
-        //    {
-        //        m_fbUserData.avatar = userData.avatar;
-        //    }
-        //    updateMenuUiWithUserData(m_fbUserData);
-        //    return 0;
-        //}
+        public void UpdateMenuUiOnQuestionDataLoaded()
+        {
+            DateTime seasonDate = DateTime.ParseExact(QuestionDataMart.Instance.season.from, "yyyy-MM-dd HH:mm:ss", null);
+            rMenu.SetSeasonText(QuestionDataMart.Instance.season.name + " - " + seasonDate.ToString("dd/MM/yyyy"));
+            rMenu.SetQuoteText(QuestionDataMart.Instance.onluckLocalMetadata.quote);
+        }
         public void UpdateMenuUiWithUserData() 
         {
-            rMenu.ToggleSoundButtonUi(m_isSoundOn);
+            rMenu.ToggleSoundButtonUi(Main.Instance.soundEnabled);
             if (UserDataMart.Instance.m_userData.texProfilePicture!=null)
                 rMenu.SetAvatar(UserDataMart.Instance.m_userData.texProfilePicture);
             rMenu.SetUserName(UserDataMart.Instance.m_userData.name);
-            rMenu.SetScore(UserDataMart.Instance.m_userData.score);
+            rMenu.SetScore(PlayingDataMart.Instance.m_score);
             rMenu.ToggleUiAccordingToLoginState(UserDataMart.Instance.m_isUserDataValid);
             if (UserDataMart.Instance.m_isUserDataValid)
             {
-                rMenu.SetQuestionPacks(QuestionDataMart.Instance.GetQuestionPacksMetadata().Count, (item, index) =>
-                {
-                    item.SetIcon(QuestionDataMart.Instance.GetQuestionPacksMetadata()[index].texIcon);
-                    item.SetTitle(QuestionDataMart.Instance.GetQuestionPacksMetadata()[index].title);
-                    item.SetSubText(QuestionDataMart.Instance.GetQuestionPacksMetadata()[index].subText);
-                    item.Index = index;
-                });
+                showQuestionPacks();
             }
             //notify the server
             //HttpClient.Instance.SignIn(userData.name,userData.);
@@ -325,19 +241,27 @@ namespace Assets.Scripts
         public void OnLoggedIn()
         {
             //not sure here...
-            PlayingDataMart.Instance.m_score = UserDataMart.Instance.m_userData.score;
-
+            //PlayingDataMart.Instance.m_score = UserDataMart.Instance.m_userData.score;
+            Debug.Log("Logged In BABE");
+            m_loginState = true;
+        }
+        public void OnQuit()
+        {
+            LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData, !UserDataMart.Instance.m_isUserDataValid);
+            Debug.Log("MenuPreseneter:OnQuit");
         }
         public void Logout()
         {
             FBLogin.Instance.Logout();
             UserDataMart.Instance.InvalidateUserData();
             rMenu.ToggleUiAccordingToLoginState(UserDataMart.Instance.m_isUserDataValid);
+            m_loginState = false;
         }
         public void ToggleSound()
         {
-            m_isSoundOn = !m_isSoundOn;
-            rMenu.ToggleSoundButtonUi(m_isSoundOn);
+            //m_isSoundOn = !m_isSoundOn;
+            Main.Instance.soundEnabled = !Main.Instance.soundEnabled;
+            rMenu.ToggleSoundButtonUi(Main.Instance.soundEnabled);
         }
 
         public void UploadProfilePicture(string path)
@@ -365,16 +289,27 @@ namespace Assets.Scripts
                 {
                     if (response.status.Equals("OK"))
                     {
-                        UserDataMart.Instance.m_userData.profilePicture = response.data.profile_picture;
+                        UserDataMart.Instance.m_userData.uptodate_token = response.data.uptodate_token;
+                        UserDataMart.Instance.m_userData.profile_picture = response.data.profile_picture;
                     }
                 });
             });
         }
-        public void Rename(string newName)
+        public delegate void RenameCallback(bool status);
+        public void Rename(string newName, RenameCallback callback)
         {
-            UserDataMart.Instance.m_userData.name = newName;
-            rMenu.SetUserName(UserDataMart.Instance.m_userData.name);
-            HttpClient.Instance.Rename(UserDataMart.Instance.m_userData.id, UserDataMart.Instance.m_userData.name);
+            //rMenu.SetUserName(UserDataMart.Instance.m_userData.name);
+            HttpClient.Instance.Rename(UserDataMart.Instance.m_userData.id, UserDataMart.Instance.m_userData.name,(response)=> {
+                if (response.status.Equals("OK"))
+                {
+                    Debug.Log("Token token: " + response.data.uptodate_token);
+                    UserDataMart.Instance.m_userData.uptodate_token = response.data.uptodate_token;
+                    UserDataMart.Instance.m_userData.name = newName;
+                    UserDataMart.Instance.NotifyNewData();
+                    callback(true);
+                }else
+                    callback(false);
+            });
         }
         public bool ShowScoreboard()
         {
@@ -402,98 +337,33 @@ namespace Assets.Scripts
             return false;
         }
 
-        /*Question Pack number depended from here...*/
-        private bool[] m_openedQuestionPackForTheFirstTime = { true, true, true };
-        public void OpenQuestionPack(int pack)
+        /*Question Pack number dependency starts from here...*/
+        public void OpenQuestionPack(int packIndex)
         {
-            int currentQuestionIndex;
-            string startupText;
-            string buttonText;
-            switch (pack)
+            QuestionDataMart.Pack pack = QuestionDataMart.Instance.packs[packIndex];
+            PlayingDataMart.Pack playingPack = PlayingDataMart.Instance.playingPacks[packIndex];
+
+            string startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack + " " + pack.title+ "\n"+
+                AssetsDataMart.Instance.assetsData.strings.startup_text_question_no + " " + (playingPack.currentIndex + 1);
+            string buttonText = AssetsDataMart.Instance.assetsData.strings.resume;
+            if (playingPack.currentIndex == 0)
             {
-                case 0:
-                    //if (m_openedQuestionPackForTheFirstTime[pack])
-                    //{
-                        currentQuestionIndex = PlayingDataMart.Instance.m_currentQuestionIndex80;
-                        startupText = "GOI CAU HOI THU THACH\nBan da mo khoa cau so " + (currentQuestionIndex + 1);
-                        buttonText = "CAU TIEP THEO";
-                        if (currentQuestionIndex == 0)
-                        {
-                            startupText = "GOI CAU HOI THU THACH";
-                            buttonText = "BAT DAU";
-                        }
-                        rMenu.OpenStartupPanel(startupText, buttonText, (status) =>
-                        {
-                            if (status&& QuestionDataMart.Instance.m_80QuestionPack.Count>0)
-                            {
-                                //m_openedQuestionPackForTheFirstTime[pack] = false;
-                                GameScene.MainGamePresenter.Instance.SetToTypingMode(QuestionDataMart.Instance.m_80QuestionPack, PlayingDataMart.Instance.m_questionImage80, currentQuestionIndex, pack);
-                                SceneManager.LoadScene("main_game");
-                            }
-                        });
-                    //}
-                    //else
-                    //{
-                    //    GameScene.MainGamePresenter.Instance.SetToTypingMode(QuestionDataMart.Instance.m_80QuestionPack, PlayingDataMart.Instance.m_questionImage80, PlayingDataMart.Instance.m_currentQuestionIndex80, pack);
-                    //    SceneManager.LoadScene("main_game");
-                    //}
-                    break;
-                case 1:
-                    //if (m_openedQuestionPackForTheFirstTime[pack])
-                    //{
-                        currentQuestionIndex = PlayingDataMart.Instance.m_currentQuestionIndex1000;
-                        startupText = "GOI CAU HOI KIEN THUC\nBan da mo khoa cau so " + (currentQuestionIndex + 1);
-                        buttonText = "CAU TIEP THEO";
-                        if (currentQuestionIndex == 0)
-                        {
-                            startupText = "GOI CAU HOI KIEN THUC";
-                            buttonText = "BAT DAU";
-                        }
-                        rMenu.OpenStartupPanel(startupText, buttonText, (status) =>
-                        {
-                            if (status && QuestionDataMart.Instance.m_1000QuestionPack.Count > 0)
-                            {
-                                //m_openedQuestionPackForTheFirstTime[pack] = false;
-                                GameScene.MainGamePresenter.Instance.SetToTypingMode(QuestionDataMart.Instance.m_1000QuestionPack, PlayingDataMart.Instance.m_questionImage1000, currentQuestionIndex, pack);
-                                SceneManager.LoadScene("main_game");
-                            }
-                        });
-                    //}
-                    //else
-                    //{
-                    //    GameScene.MainGamePresenter.Instance.SetToTypingMode(QuestionDataMart.Instance.m_1000QuestionPack, PlayingDataMart.Instance.m_questionImage1000, PlayingDataMart.Instance.m_currentQuestionIndex1000, pack);
-                    //    SceneManager.LoadScene("main_game");
-                    //}
-                    break;
-                case 2:
-                    //if (m_openedQuestionPackForTheFirstTime[pack])
-                    //{
-                        currentQuestionIndex = PlayingDataMart.Instance.m_currentQuestionIndex30;
-                        startupText = "GOI CAU HOI THUONG HIEU\nBan da mo khoa cau so " + (currentQuestionIndex + 1);
-                        buttonText = "CAU TIEP THEO";
-                        if (currentQuestionIndex == 0)
-                        {
-                            startupText = "GOI CAU HOI THUONG HIEU";
-                            buttonText = "BAT DAU";
-                        }
-                        rMenu.OpenStartupPanel(startupText, buttonText, (status) =>
-                        {
-                            if (status && QuestionDataMart.Instance.m_30QuestionPack.Count > 0)
-                            {
-                                //m_openedQuestionPackForTheFirstTime[pack] = false;
-                                GameScene.MainGamePresenter.Instance.SetToMCQMode(QuestionDataMart.Instance.m_30QuestionPack, PlayingDataMart.Instance.m_questionImage30, currentQuestionIndex, pack);
-                                SceneManager.LoadScene("main_game");
-                            }
-                        });
-                    //}
-                    //else
-                    //{
-                    //    GameScene.MainGamePresenter.Instance.SetToMCQMode(QuestionDataMart.Instance.m_30QuestionPack, PlayingDataMart.Instance.m_questionImage30, PlayingDataMart.Instance.m_currentQuestionIndex30, pack);
-                    //    SceneManager.LoadScene("main_game");
-                    //}
-                    break;
+                startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack+" " + pack.title;
+                buttonText = AssetsDataMart.Instance.assetsData.strings.start;
+            }else if (playingPack.currentIndex == playingPack.playingQuestions.Count)
+            {
+                startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack+" " + pack.title
+                    +"\n"+ AssetsDataMart.Instance.assetsData.strings.startup_text_complete;
+                buttonText = AssetsDataMart.Instance.assetsData.strings.open;
             }
-            Debug.Log("Open Question Pack " + pack);
+            rMenu.OpenStartupPanel(startupText, buttonText, (status) =>
+            {
+                if (status)
+                {
+                    GameScene.MainGamePresenter.Instance.StartGame(pack, playingPack,packIndex);
+                    Debug.Log("Open Question Pack " + packIndex);
+                }
+            });
         }
     }
 }

@@ -21,7 +21,11 @@ public class QuestionPackItem : MonoBehaviour
     {
         
     }
-
+    public void SetIcon(Sprite sprite)
+    {
+        if (sprite != null)
+            UiIconImage.sprite = sprite;
+    }
     public void SetIcon(Texture2D texture)
     {
         if(texture!=null)

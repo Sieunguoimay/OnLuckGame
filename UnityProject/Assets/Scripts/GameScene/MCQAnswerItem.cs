@@ -58,7 +58,14 @@ public class MCQAnswerItem : MonoBehaviour
         //ColorBlock color = UiButton.colors;
         //color.selectedColor = new Color32(253, 188, 102,255); ;
         //UiButton.colors = color;
-        UiImage.color = new Color32(255,255,255,255);
+        if (Index % 2 == 0)
+        {
+            UiImage.color = new Color32(255, 119, 61, 255);
+        }
+        else
+        {
+            UiImage.color = new Color32(255, 125, 61, 255);
+        }
         UiButton.interactable = true;
     }
 }

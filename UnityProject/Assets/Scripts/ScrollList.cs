@@ -39,6 +39,25 @@ public class ScrollList : MonoBehaviour
             m_cachedItemList.Add(newItem);
         }
     }
+    public void CreateList(int number, ShowListCallback<GameObject> callback)
+    {
+        foreach (GameObject item in m_cachedItemList)
+        {
+            Destroy(item);
+        }
+        m_cachedItemList.Clear();
+
+        for (int i = 0; i < number; i++)
+        {
+            GameObject newItem = Instantiate(ItemTemplate) as GameObject;
+            newItem.SetActive(true);
+            newItem.transform.SetParent(ItemTemplate.transform.parent, false);
+
+            callback(newItem, i);
+
+            m_cachedItemList.Add(newItem);
+        }
+    }
     public void Clear()
     {
         foreach (GameObject item in m_cachedItemList)
