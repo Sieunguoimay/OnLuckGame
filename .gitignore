@@ -2,7 +2,6 @@ UnityProject/Library
 UnityProject/Temp
 UnityProject/obj
 UnityProject/build
-UnityProject/Assets/*.meta
 UnityProject/Assets/Plugins
 UnityProject/Assets/PlayServicesResolver
 UnityProject/.vs
