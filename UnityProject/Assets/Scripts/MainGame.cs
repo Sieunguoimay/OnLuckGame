@@ -51,6 +51,7 @@ public class MainGame : MonoBehaviour
 
     public GameObject UiImageSlideshow;
     public GameObject UiImageItemTemplate;
+    public GameObject UiSaveFeedbackText;
 
     void Awake()
     {
@@ -453,5 +454,23 @@ public class MainGame : MonoBehaviour
         PopupManager popupManager = UiPopupPanel.GetComponent<PopupManager>();
         popupManager.m_askingOnLeaving = true;
         popupManager.ShowAskingOnLeavingPopup((success)=>callback(success));
+    }
+
+    public void ShowSaveFeedback()
+    {
+        UiSaveFeedbackText.SetActive(true);
+        UiSaveFeedbackText.GetComponent<Animator>().SetTrigger("show");
+        StartCoroutine(saveFeedback(UiSaveFeedbackText.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length,()=> {
+            UiSaveFeedbackText.GetComponent<Animator>().SetTrigger("hide");
+            StartCoroutine(saveFeedback(UiSaveFeedbackText.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length, () => {
+                UiSaveFeedbackText.SetActive(false);
+            }));
+        }));
+    }
+    public delegate void showSaveFeedbackCallback();
+    public IEnumerator saveFeedback(float time,showSaveFeedbackCallback callback)
+    {
+        yield return new WaitForSeconds(time);
+        callback();
     }
 }

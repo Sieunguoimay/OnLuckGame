@@ -466,8 +466,13 @@ namespace Assets.Scripts.GameScene
                 if (status)
                 {
                     Debug.Log("saved image bro...");
-                }
-            });
+                        m_rMainGame.ShowSaveFeedback();
+                    }
+                    else
+                    {
+                        Debug.Log("Not saved image bro...");
+                    }
+                });
         }
         public bool IsLastQuestion()
         {

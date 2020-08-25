@@ -41,6 +41,7 @@ public class Menu : MonoBehaviour
 
 
     public GameObject UiSplashScenePanel;
+    public GameObject UiSplashSceneSpinnerTargetPanel;
     public GameObject UiSplashSceneLogoPanel;
     public ProgressBar UiProgressBar;
     private bool hideSplashSceneLock;
@@ -387,12 +388,15 @@ public class Menu : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
         }
         UiSplashScenePanel.SetActive(false);
+        UiSpinner.transform.SetParent(transform);
+        UiSpinner.SetActive(false);
         Debug.Log("Splash scene is gone");
 
     }
     public void ShowSplashScene()
     {
         UiSplashScenePanel.SetActive(true);
+        SetSpinnerTo(UiSplashSceneSpinnerTargetPanel);
     }
     public void HideSplashScene()
     {
