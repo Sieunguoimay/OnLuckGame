@@ -102,8 +102,8 @@ public class LocalProvider
 
         var pngData = texture.EncodeToPNG();
         if (pngData != null){
-            NativeGallery.SaveImageToGallery(pngData,"OnluckTheGame",filename, ( err) => {
-                Debug.Log("Log: " + err);
+            NativeGallery.SaveImageToGallery(pngData,"OnluckTheGame",filename, (success,path) => {
+                Debug.Log("Log: " + success+" "+ path);
                 callback(true);
             });
         }

@@ -67,6 +67,7 @@ public class MainGame : MonoBehaviour
         UiHintPopupPanel.SetActive(false);
         UiHintPriceText.transform.parent.gameObject.SetActive(false);
         UiHintPriceText2.transform.parent.gameObject.SetActive(false);
+        UiSaveFeedbackText.SetActive(false);
         UiTimerText.GetComponent<CountdownTimer>().m_timeoutCallback += OnMQCQuestionTimeout;
         UiPopupPanel.GetComponent<PopupManager>().m_answerPopupCallback = OnPopupPanelClosed;
  
@@ -81,10 +82,13 @@ public class MainGame : MonoBehaviour
     {
         
     }
-    void OnApplicationPause()
+    void OnApplicationPause(bool status)
     {
-        MenuPresenter.Instance.OnQuit();
-        MainGamePresenter.Instance.OnQuit();
+        if (status)
+        {
+            MenuPresenter.Instance.OnQuit();
+            MainGamePresenter.Instance.OnQuit();
+        }
     }
 
     /*Event list goes here..*/
@@ -459,18 +463,26 @@ public class MainGame : MonoBehaviour
     public void ShowSaveFeedback()
     {
         UiSaveFeedbackText.SetActive(true);
-        UiSaveFeedbackText.GetComponent<Animator>().SetTrigger("show");
-        StartCoroutine(saveFeedback(UiSaveFeedbackText.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length,()=> {
-            UiSaveFeedbackText.GetComponent<Animator>().SetTrigger("hide");
-            StartCoroutine(saveFeedback(UiSaveFeedbackText.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length, () => {
-                UiSaveFeedbackText.SetActive(false);
-            }));
+        StartCoroutine(saveFeedback(3.0f, () => {
+            UiSaveFeedbackText.SetActive(false);
         }));
+
+        //Animator animator = UiSaveFeedbackPanel.GetComponent<Animator>();
+        //if (animator != null)
+        //{
+        //    //animator.SetTrigger("show");
+        //    //var clipInfo = animator.GetCurrentAnimatorClipInfo(0);
+        //    if (clipInfo.Length > 0)
+        //    {
+        //        float time = clipInfo[0].clip.length;
+        //    }
+        //}
     }
     public delegate void showSaveFeedbackCallback();
     public IEnumerator saveFeedback(float time,showSaveFeedbackCallback callback)
     {
         yield return new WaitForSeconds(time);
-        callback();
+        if(callback!=null)
+            callback();
     }
 }

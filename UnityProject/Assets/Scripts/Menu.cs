@@ -6,7 +6,8 @@ using UnityEngine.EventSystems;
 using Assets.Scripts;
 using Assets.Scripts.DataMarts;
 using Assets.Scripts.GameScene;
-
+using UnityEditor.PackageManager;
+using UnityEditor;
 
 public class Menu : MonoBehaviour
 {
@@ -82,6 +83,8 @@ public class Menu : MonoBehaviour
 
     void Awake()
     {
+
+
         Debug.Log("Menu Awake");
         Utils.Instance.Init(this);
         Main.Instance.Init(this);
@@ -124,9 +127,16 @@ public class Menu : MonoBehaviour
         AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
         Debug.Log("Menu Started");
     }
-    void OnApplicationPause()
+    void OnApplicationPause(bool status)
     {
-        m_menuPresenter.OnQuit();
+        if (status)
+        {
+            m_menuPresenter.OnQuit();
+        }
+        else
+        {
+            //open up
+        }
     }
 
     public void OnLoginButtonClicked()
