@@ -44,7 +44,7 @@ namespace Assets.Scripts
                     UserDataMart.Instance.m_userData.texProfilePicture = texture;
                     UserDataMart.Instance.NotifyNewData();
                     Debug.Log("Loaded profile picture, let's save user data to local");
-                    LocalProvider.Instance.AddUserData(UserDataMart.Instance.m_userData);
+                    LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,true);
                 });
                 //Done
             };
@@ -95,7 +95,7 @@ namespace Assets.Scripts
                                         Debug.Log("Signed in with facebook. got the user_id, let's save the user data to local device");
                                         UserDataMart.Instance.SetUserData(fbUserData);
                                         UserDataMart.Instance.NotifyDataFromServerValid();
-                                        LocalProvider.Instance.AddUserData(UserDataMart.Instance.m_userData);
+                                        LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,false);
                                         Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
                                         if(fbLoginDoneCallback!=null)
                                             fbLoginDoneCallback(true);

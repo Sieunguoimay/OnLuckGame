@@ -321,6 +321,20 @@ public class Utils /*: MonoBehaviour*/
         }
         return obj;
     }
+    public delegate void LoadFileAsyncCallback(Texture2D texture);
+    public void LoadTextureFileAsync(string fileName, LoadFileAsyncCallback callback)
+    {
+        m_rMonoBehaviour.StartCoroutine(loadFileAsync(fileName,callback));
+    }
+
+    // Use this for initialization
+    IEnumerator loadFileAsync(string fileName, LoadFileAsyncCallback callback)
+    {
+        WWW www = new WWW(root + "/" + fileName);
+        while (!www.isDone) yield return null;
+        callback(www.texture);
+    }
+
     public void SetAndStretchToParentSize(RectTransform _mRect, RectTransform _parent)
     {
         _mRect.anchoredPosition = _parent.position;
@@ -355,5 +369,63 @@ public class Utils /*: MonoBehaviour*/
     //}
 
 
+    public void showToast(string text,int duration, Text txt)
+    {
+        m_rMonoBehaviour.StartCoroutine(showToastCOR(text, duration,txt));
+    }
+
+    private IEnumerator showToastCOR(string text,
+        int duration, Text txt)
+    {
+        Color orginalColor = txt.color;
+
+        txt.text = text;
+        txt.enabled = true;
+
+        //Fade in
+        yield return fadeInAndOut(txt, true, 0.5f);
+
+        //Wait for the duration
+        float counter = 0;
+        while (counter < duration)
+        {
+            counter += Time.deltaTime;
+            yield return null;
+        }
+
+        //Fade out
+        yield return fadeInAndOut(txt, false, 0.5f);
+
+        txt.enabled = false;
+        txt.color = orginalColor;
+    }
+
+    IEnumerator fadeInAndOut(Text targetText, bool fadeIn, float duration)
+    {
+        //Set Values depending on if fadeIn or fadeOut
+        float a, b;
+        if (fadeIn)
+        {
+            a = 0f;
+            b = 1f;
+        }
+        else
+        {
+            a = 1f;
+            b = 0f;
+        }
+
+        Color currentColor = Color.clear;
+        float counter = 0f;
+
+        while (counter < duration)
+        {
+            counter += Time.deltaTime;
+            float alpha = Mathf.Lerp(a, b, counter / duration);
+
+            targetText.color = new Color(currentColor.r, currentColor.g, currentColor.b, alpha);
+            yield return null;
+        }
+    }
 
 }

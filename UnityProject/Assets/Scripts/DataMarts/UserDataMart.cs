@@ -140,7 +140,7 @@ namespace Assets.Scripts.DataMarts
         public void InvalidateUserData()
         {
             m_isUserDataValid = false;
-            LocalProvider.Instance.SaveUserData(m_userData,true);
+            LocalProvider.Instance.SaveUserData(m_userData,false);
         }
     }
 }

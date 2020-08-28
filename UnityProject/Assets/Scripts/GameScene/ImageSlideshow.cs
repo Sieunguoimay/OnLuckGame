@@ -12,9 +12,8 @@ public class ImageSlideshow : MonoBehaviour
     float firstTouchScrollPos = 0;
     bool direction = false;
     bool changeImage = false;
-    bool dontChangeIndex = false;
     // Start is called before the first frame update
-    int index = 0;
+    public int index = 0;
     void Start()
     {
         Debug.Log("ImageSlideshow:Start");
@@ -75,32 +74,28 @@ public class ImageSlideshow : MonoBehaviour
                 if (scroll_pos - firstTouchScrollPos > distance * 0.2)
                 {
                     changeImage = true;
-                    dontChangeIndex = false;
                     direction = true;
+                    index += (direction ? 1 : -1);
+                    if (index < 0) index = 0;
+                    if (index > childCount - 1) index = childCount - 1;
                 }
                 else if (scroll_pos - firstTouchScrollPos < -distance * 0.2)
                 {
                     changeImage = true;
-                    dontChangeIndex = false;
                     direction = false;
+                    index += (direction ? 1 : -1);
+                    if (index < 0) index = 0;
+                    if (index > childCount - 1) index = childCount - 1;
                 }
                 else
                 {
                     changeImage = true;
-                    dontChangeIndex = true;
                 }
             }
         }
 
         if (changeImage)
         {
-            if (!dontChangeIndex)
-            {
-                index += (direction ? 1 : -1);
-                if (index < 0) index = 0;
-                if (index > childCount - 1) index = childCount - 1;
-            }
-
             scrollbar.GetComponent<Scrollbar>().value = Mathf.Lerp(scrollbar.GetComponent<Scrollbar>().value, pos[index], 0.25f);
             if (Mathf.Abs(scrollbar.GetComponent<Scrollbar>().value - pos[index]) < 0.001f)
             {

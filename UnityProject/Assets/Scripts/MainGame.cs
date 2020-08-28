@@ -53,6 +53,9 @@ public class MainGame : MonoBehaviour
     public GameObject UiImageItemTemplate;
     public GameObject UiSaveFeedbackText;
 
+
+    public Text UiToastText;
+
     void Awake()
     {
         Utils.Instance.Init(this);
@@ -80,17 +83,25 @@ public class MainGame : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+            Utils.Instance.showToast("Input.GetKeyDown(KeyCode.Escape)", 2,UiToastText);
+        }
     }
     void OnApplicationPause(bool status)
     {
         if (status)
         {
-            MenuPresenter.Instance.OnQuit();
-            MainGamePresenter.Instance.OnQuit();
+            Utils.Instance.showToast("OnApplicationPause", 2,UiToastText);
         }
     }
-
+    void OnApplicationQuit()
+    {
+        //MenuPresenter.Instance.OnQuit();
+        //MainGamePresenter.Instance.OnQuit();
+        Utils.Instance.showToast("OnApplicationQuit", 2,UiToastText);
+    }
     /*Event list goes here..*/
 
     public void OnQuestionListPanelBackButtonClicked()
@@ -306,6 +317,7 @@ public class MainGame : MonoBehaviour
         });
         UiImageSlideshow.GetComponent<ImageSlideshow>().scrollbar.GetComponent<Scrollbar>().value = 0;
         UiImageSlideshow.GetComponent<ImageSlideshow>().scroll_pos = 0;
+        UiImageSlideshow.GetComponent<ImageSlideshow>().index = 0;
     }
     public void SetPrevAnswer(string prevAnswer)
     {

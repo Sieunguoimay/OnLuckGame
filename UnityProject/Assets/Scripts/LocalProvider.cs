@@ -147,11 +147,11 @@ public class LocalProvider
         return null;
     }
 
-    public void SaveUserData(UserDataMart.UserData newUserData, bool logout = false)
+    public void SaveUserData(UserDataMart.UserData newUserData, bool saveImages = true)
     {
         Debug.Log("userDataList.Count" + userDataList.Count);
         int m_activeUserIndex = -1;
-        if (!logout)
+        if (saveImages)
         {
             bool isNewUserData = true;
             for (int i = 0; i < userDataList.Count; i++)
@@ -246,8 +246,12 @@ public class LocalProvider
                 {
                     foreach(QuestionDataMart.Image image in question.images)
                     {
-                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
+                        {
+                            image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        });
                     }
                 }
                     //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
@@ -257,8 +261,12 @@ public class LocalProvider
                 {
                     foreach (QuestionDataMart.Image image in question.images)
                     {
-                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
+                        {
+                            image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        });
                     }
                 }
             }

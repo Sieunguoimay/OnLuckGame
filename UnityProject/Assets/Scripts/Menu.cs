@@ -6,8 +6,6 @@ using UnityEngine.EventSystems;
 using Assets.Scripts;
 using Assets.Scripts.DataMarts;
 using Assets.Scripts.GameScene;
-using UnityEditor.PackageManager;
-using UnityEditor;
 
 public class Menu : MonoBehaviour
 {
@@ -81,9 +79,11 @@ public class Menu : MonoBehaviour
 
     public Text UiQuoteText;
 
+    public Text UiToastText;
     void Awake()
     {
 
+        Application.runInBackground = true;
 
         Debug.Log("Menu Awake");
         Utils.Instance.Init(this);
@@ -131,12 +131,22 @@ public class Menu : MonoBehaviour
     {
         if (status)
         {
-            m_menuPresenter.OnQuit();
+            Utils.Instance.showToast("Menu::OnApplicationPause", 2, UiToastText);
         }
-        else
+    }
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
-            //open up
+            Application.Quit();
+            Utils.Instance.showToast("Menu::Input.GetKeyDown(KeyCode.Escape)", 2, UiToastText);
         }
+    }
+    void OnApplicationQuit()
+    {
+        //MenuPresenter.Instance.OnQuit();
+        //MainGamePresenter.Instance.OnQuit();
+        Utils.Instance.showToast("Menu::OnApplicationQuit", 2, UiToastText);
     }
 
     public void OnLoginButtonClicked()
