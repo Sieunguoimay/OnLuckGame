@@ -9,6 +9,7 @@ using Assets.Scripts.GameScene;
 
 public class Menu : MonoBehaviour
 {
+    public GameObject Canvas;
     public GameObject UiLoginButtonPanel;
     public GameObject UiLoginButtonContentPanel;
     public GameObject UiQuestionPackItemPanel;
@@ -79,7 +80,7 @@ public class Menu : MonoBehaviour
 
     public Text UiQuoteText;
 
-    public Text UiToastText;
+    private bool pressOneMoreTimeToExit;
     void Awake()
     {
 
@@ -119,34 +120,46 @@ public class Menu : MonoBehaviour
         //UiProgressBar.value = 0;
         hideSplashSceneLock = true;
         progressBarLock = false;
-
+        pressOneMoreTimeToExit = false;
 
         m_menuPresenter = MenuPresenter.Instance.Init(this);
 
         gameObject.AddComponent<AudioSource>();
         AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
         Debug.Log("Menu Started");
+
     }
     void OnApplicationPause(bool status)
     {
         if (status)
         {
-            Utils.Instance.showToast("Menu::OnApplicationPause", 2, UiToastText);
+            //Utils.Instance.showToast("Menu::OnApplicationPause", 2, UiToastText);
         }
     }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Application.Quit();
-            Utils.Instance.showToast("Menu::Input.GetKeyDown(KeyCode.Escape)", 2, UiToastText);
+            if (!pressOneMoreTimeToExit)
+            {
+                pressOneMoreTimeToExit = true;
+                Toast.Instance.Show(Canvas, AssetsDataMart.Instance.assetsData.strings.press_one_more_time, 3, () =>
+                {
+                    pressOneMoreTimeToExit = false;
+                });
+            }
+            else
+            {
+                Application.Quit();
+            }
         }
     }
+
     void OnApplicationQuit()
     {
-        //MenuPresenter.Instance.OnQuit();
-        //MainGamePresenter.Instance.OnQuit();
-        Utils.Instance.showToast("Menu::OnApplicationQuit", 2, UiToastText);
+        Debug.Log("Onluck Application Quit");
+        MenuPresenter.Instance.OnQuit();
     }
 
     public void OnLoginButtonClicked()

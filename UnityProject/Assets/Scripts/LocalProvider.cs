@@ -248,8 +248,10 @@ public class LocalProvider
                     {
                         //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
                         //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        Debug.Log("Utils.Instance.LoadTextureFileAsync:"+ image.path);
                         Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
                         {
+                            Debug.Log("Utils.Instance.LoadTextureFileAsync: Loaded"+ image.path);
                             image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
                         });
                     }

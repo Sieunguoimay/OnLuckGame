@@ -63,7 +63,7 @@ public class Utils /*: MonoBehaviour*/
 
 
     private static Utils s_instance = null;
-    private MonoBehaviour m_rMonoBehaviour = null;
+    public MonoBehaviour context = null;
     private string root = "/";
     public delegate void RequestCallback(string response);
     public delegate void NoInternetCallback();
@@ -87,12 +87,12 @@ public class Utils /*: MonoBehaviour*/
     public void Init(MonoBehaviour monoBehaviour)
     {
         //if(m_rMonoBehaviour==null)
-        m_rMonoBehaviour = monoBehaviour;
+        context = monoBehaviour;
     }
 
     public void GetRequest(string uri, RequestCallback callback = null)
     {
-        m_rMonoBehaviour.StartCoroutine(getRequest(uri,callback));
+        context.StartCoroutine(getRequest(uri,callback));
     }
 
     IEnumerator getRequest(string uri, RequestCallback callback)
@@ -124,7 +124,7 @@ public class Utils /*: MonoBehaviour*/
     }
     public void LoadImageIntoImage(string url, Image image)
     {
-        m_rMonoBehaviour.StartCoroutine(loadImageIntoTexture(url, image));
+        context.StartCoroutine(loadImageIntoTexture(url, image));
     }
     IEnumerator loadImageIntoTexture(string url, Image image)
     {
@@ -141,7 +141,7 @@ public class Utils /*: MonoBehaviour*/
     public void PostRequest(string url, string str, RequestCallback callback)
     {
         Debug.Log("PostRequest" + url);
-        m_rMonoBehaviour.StartCoroutine(postRequest(url, str, callback));
+        context.StartCoroutine(postRequest(url, str, callback));
     }
     IEnumerator postRequest(string url, string str, RequestCallback callback)
     {
@@ -171,7 +171,7 @@ public class Utils /*: MonoBehaviour*/
     }
     public void PostRequest(string url, WWWForm formData, RequestCallback callback)
     {
-        m_rMonoBehaviour.StartCoroutine(postRequest(url,formData,callback));
+        context.StartCoroutine(postRequest(url,formData,callback));
     }
     IEnumerator postRequest(string url,WWWForm formData, RequestCallback callback)
     {
@@ -201,7 +201,7 @@ public class Utils /*: MonoBehaviour*/
     public void LoadImage(string url, LoadImageCallback callback)
     {
         //return File.ReadAllBytes(path);
-        m_rMonoBehaviour.StartCoroutine(loadImage(url, callback));
+        context.StartCoroutine(loadImage(url, callback));
     }
     private IEnumerator loadImage(string url, LoadImageCallback callback)
     {
@@ -324,15 +324,17 @@ public class Utils /*: MonoBehaviour*/
     public delegate void LoadFileAsyncCallback(Texture2D texture);
     public void LoadTextureFileAsync(string fileName, LoadFileAsyncCallback callback)
     {
-        m_rMonoBehaviour.StartCoroutine(loadFileAsync(fileName,callback));
+        context.StartCoroutine(loadFileAsync(fileName,callback));
     }
 
     // Use this for initialization
+    [Obsolete]
     IEnumerator loadFileAsync(string fileName, LoadFileAsyncCallback callback)
     {
+        Debug.Log("loadFileAsync");
         WWW www = new WWW(root + "/" + fileName);
         while (!www.isDone) yield return null;
-        callback(www.texture);
+        callback?.Invoke(www.texture);
     }
 
     public void SetAndStretchToParentSize(RectTransform _mRect, RectTransform _parent)
@@ -371,7 +373,7 @@ public class Utils /*: MonoBehaviour*/
 
     public void showToast(string text,int duration, Text txt)
     {
-        m_rMonoBehaviour.StartCoroutine(showToastCOR(text, duration,txt));
+        context.StartCoroutine(showToastCOR(text, duration,txt));
     }
 
     private IEnumerator showToastCOR(string text,

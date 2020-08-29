@@ -1,6 +1,6 @@
 {
-	"base_url":"http://5e7278248cdb.ngrok.io",
-	"base_api_url":"http://5e7278248cdb.ngrok.io/api/onluck",
+	"base_url":"http://509d6c666e4e.ngrok.io",
+	"base_api_url":"http://509d6c666e4e.ngrok.io/api/onluck",
 	"strings": {
 		"login": "Đăng Nhập",
 		"logout": "Đăng Xuất",
@@ -29,6 +29,7 @@
 		"incorrect":"Không Chính Xác!",
 		"the_answer_is":"Đáp án là",
 		"next_question":"Câu Tiếp Theo",
-		"timeout":"Hết Thời Gian"
+		"timeout":"Hết Thời Gian",
+		"press_one_more_time":"Ấn thêm một lần nữa để thoát"
 	}
 }

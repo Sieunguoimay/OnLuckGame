@@ -335,20 +335,24 @@ public class HttpClient
             Response<Season> res = JsonUtility.FromJson<Response<Season>>(response);
             if (res.status.Equals("OK"))
             {
-                QuestionDataMart.Season season = new QuestionDataMart.Season();
                 HttpClient.Season ss = res.data;
-                season.id = ss.id;
-                season.name = ss.name;
-                season.from = ss.from;
-                season.to = ss.to;
-                season.packs = new List<QuestionDataMart.Pack>();
+                QuestionDataMart.Season season = new QuestionDataMart.Season
+                {
+                    id = ss.id,
+                    name = ss.name,
+                    from = ss.from,
+                    to = ss.to,
+                    packs = new List<QuestionDataMart.Pack>()
+                };
                 foreach (HttpClient.Pack p in ss.packs)
                 {
-                    QuestionDataMart.Pack pack = new QuestionDataMart.Pack();
-                    pack.id = p.id;
-                    pack.title = p.title;
-                    pack.sub_text = p.sub_text;
-                    pack.icon = new QuestionDataMart.Image() { path = p.icon };
+                    QuestionDataMart.Pack pack = new QuestionDataMart.Pack
+                    {
+                        id = p.id,
+                        title = p.title,
+                        sub_text = p.sub_text,
+                        icon = new QuestionDataMart.Image() { path = p.icon }
+                    };
                     imagesToDownloadCount += 1;
                     Utils.Instance.LoadImage(BaseUrl + pack.icon.path,(texture)=> { 
                         Debug.Log("Downloaded "+ pack.icon.path); 
@@ -361,12 +365,14 @@ public class HttpClient
                         pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
                         foreach (HttpClient.TypedQuestion q in p.typed_questions)
                         {
-                            QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion();
-                            question.id = q.id;
-                            question.question = q.question;
-                            question.answer = q.answer;
-                            question.score = q.score;
-                            question.images = new List<QuestionDataMart.Image>();
+                            QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion
+                            {
+                                id = q.id,
+                                question = q.question,
+                                answer = q.answer,
+                                score = q.score,
+                                images = new List<QuestionDataMart.Image>()
+                            };
                             List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
                             imagesToDownloadCount += images.Count;
                             foreach (string img in images)
@@ -389,14 +395,16 @@ public class HttpClient
                         pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
                         foreach (HttpClient.McqQuestion q in p.mcq_questions)
                         {
-                            QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion();
-                            question.id = q.id;
-                            question.question = q.question;
-                            question.choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray();
-                            question.answer = q.answer;
-                            question.time = q.time;
-                            question.score = q.score;
-                            question.images = new List<QuestionDataMart.Image>();
+                            QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion
+                            {
+                                id = q.id,
+                                question = q.question,
+                                choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
+                                answer = q.answer,
+                                time = q.time,
+                                score = q.score,
+                                images = new List<QuestionDataMart.Image>()
+                            };
                             List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
                             imagesToDownloadCount += images.Count;
                             foreach (string img in images)
@@ -407,7 +415,7 @@ public class HttpClient
                                     image.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0));
                                     signalImageDownloaded(); });
                             }
-                            question.hints = new List<string>();
+                            //question.hints = new List<string>();
                             question.hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
                             pack.mcq_questions.Add(question);
                         }
@@ -428,7 +436,7 @@ public class HttpClient
     {
         Utils.Instance.GetRequest(BaseApiUrl + "/getplayingdata?user_id="+userId, (response) =>
         {
-            Debug.Log(response);
+            Debug.Log("GetPlayingDataFromServer:"+response);
             Response<PlayingDataMart.PlayingData> res = JsonUtility.FromJson<Response<PlayingDataMart.PlayingData>>(response);
             callback(res);
         });
@@ -444,3 +452,4 @@ public class HttpClient
         });
     }
 }
+    

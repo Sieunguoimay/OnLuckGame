@@ -245,11 +245,11 @@ namespace Assets.Scripts
             Debug.Log("Logged In BABE");
             m_loginState = true;
         }
-        //public void OnQuit()
-        //{
-        //    LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData, !UserDataMart.Instance.m_isUserDataValid);
-        //    Debug.Log("MenuPreseneter:OnQuit");
-        //}
+        public void OnQuit()
+        {
+            LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData, !UserDataMart.Instance.m_isUserDataValid);
+            Debug.Log("MenuPreseneter:OnQuit");
+        }
         public void Logout()
         {
             FBLogin.Instance.Logout();

@@ -85,22 +85,21 @@ public class MainGame : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            Application.Quit();
-            Utils.Instance.showToast("Input.GetKeyDown(KeyCode.Escape)", 2,UiToastText);
+            m_mainGamePresenter.Terminate();
         }
     }
     void OnApplicationPause(bool status)
     {
         if (status)
         {
-            Utils.Instance.showToast("OnApplicationPause", 2,UiToastText);
+            //Utils.Instance.showToast("OnApplicationPause", 2,UiToastText);
         }
     }
     void OnApplicationQuit()
     {
-        //MenuPresenter.Instance.OnQuit();
-        //MainGamePresenter.Instance.OnQuit();
-        Utils.Instance.showToast("OnApplicationQuit", 2,UiToastText);
+        MenuPresenter.Instance.OnQuit();
+        MainGamePresenter.Instance.OnQuit();
+        //Utils.Instance.showToast("OnApplicationQuit", 2,UiToastText);
     }
     /*Event list goes here..*/
 

@@ -2,9 +2,6 @@ UnityProject/Library
 UnityProject/Temp
 UnityProject/obj
 UnityProject/build
-UnityProject/Assets/Plugins
-UnityProject/Assets/PlayServicesResolver
-UnityProject/.vs
 
 Designs/*.zip
 Designs/*.rar
