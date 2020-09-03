@@ -79,9 +79,9 @@ namespace Assets.Scripts
                 //QuestionDataMart.Instance.m_gameDataReadyCallback += () => ;
                 hideSplashSceneNeuron = new Utils.Neuron(2);
                 hideSplashSceneNeuron.output = () => rMenu.HideSplashScene();
-                QuestionDataMart.Instance.m_gameDataReadyCallback += ()=>UpdateMenuUiOnQuestionDataLoaded();
-                QuestionDataMart.Instance.m_gameDataCompletedCallback += ()=> { showQuestionPacks(); hideSplashSceneNeuron.inputs[0].Signal(); } ;
-                rMenu.UiProgressBar.DoneCallback = () => { hideSplashSceneNeuron.inputs[1].Signal(); };
+                QuestionDataMart.Instance.m_gameDataReadyCallback += () => { UpdateMenuUiOnQuestionDataLoaded(); showQuestionPacks(); rMenu.HideLogText(); };
+                QuestionDataMart.Instance.m_gameDataCompletedCallback += () => { hideSplashSceneNeuron.inputs[0].Signal(); Debug.Log("hideSplashSceneNeuron 1"); };
+                rMenu.UiProgressBar.DoneCallback = () => { hideSplashSceneNeuron.inputs[1].Signal(); Debug.Log("hideSplashSceneNeuron 2"); };
                 Utils.Instance.networkErrorCallback += () => { Debug.Log("No Internet!!"); rMenu.ShowPopupCheckYourNetwork(); };
                 LoginLogic.Instance.fbLoginCallback += (status) => rMenu.ToggleSpinnerAtLoginButtonPanel(status);
                 LoginLogic.Instance.fbLoginDoneCallback += (status) => rMenu.ToggleSpinnerAtLoginButtonPanel(false);
@@ -209,13 +209,21 @@ namespace Assets.Scripts
         }
         private void showQuestionPacks()
         {
-            rMenu.SetQuestionPacks(QuestionDataMart.Instance.packs.Count, (item, index) =>
+            if (QuestionDataMart.Instance.packs.Count > 0)
             {
-                item.SetIcon(QuestionDataMart.Instance.packs[index].icon.sprite);
-                item.SetTitle(QuestionDataMart.Instance.packs[index].title);
-                item.SetSubText(QuestionDataMart.Instance.packs[index].sub_text);
-                item.Index = index;
-            });
+                //rMenu.ToggleSpinnerAtLoginButtonPanel(false,3);
+                rMenu.SetQuestionPacks(QuestionDataMart.Instance.packs.Count, (item, index) =>
+                {
+                    item.SetIcon(QuestionDataMart.Instance.packs[index].icon.sprite);
+                    item.SetTitle(QuestionDataMart.Instance.packs[index].title);
+                    item.SetSubText(QuestionDataMart.Instance.packs[index].sub_text);
+                    item.Index = index;
+                });
+            }
+            else
+            {
+                //rMenu.ToggleSpinnerAtLoginButtonPanel(true,3);
+            }
         }
         public void UpdateMenuUiOnQuestionDataLoaded()
         {
@@ -247,7 +255,10 @@ namespace Assets.Scripts
         }
         public void OnQuit()
         {
-            LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData, !UserDataMart.Instance.m_isUserDataValid);
+            if (UserDataMart.Instance.userDataChanged)
+            {
+                LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData, !UserDataMart.Instance.m_isUserDataValid);
+            }
             Debug.Log("MenuPreseneter:OnQuit");
         }
         public void Logout()
@@ -364,6 +375,11 @@ namespace Assets.Scripts
                     Debug.Log("Open Question Pack " + packIndex);
                 }
             });
+        }
+        public void DisplayDownloadProgress(string name, string unit, float downloaded, float total)
+        {
+            Debug.Log("MenuPresenter::DisplayDownloadProgress " + downloaded + " " + total);
+            rMenu.ShowLogText(name + (downloaded) +"/" + (total) + unit);
         }
     }
 }

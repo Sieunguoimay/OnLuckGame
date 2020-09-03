@@ -546,6 +546,25 @@ class OnluckController extends Controller
                         $playingData->uptodate_token = $newUptodateToken;
                         $playingData->save();
                     }
+
+                    $season = Season::find($metadata->active_season);
+                    unset($season->created_at);
+                    unset($season->updated_at);
+                    $packs = Pack::select(['id','season_id','title','sub_text','icon','question_type'])
+                        ->where('season_id',$season->id)->get();
+                    foreach ($packs as $pack){
+                        if($pack->question_type=="0"){
+                            $pack->typed_questions = TypedQuestion::where('pack_id',$pack->id)->get();
+                        }else if($pack->question_type=="1"){
+                            $pack->mcq_questions = McqQuestion::where('pack_id',$pack->id)->get();
+                        }
+                    }
+                    $season->packs = $packs;
+                    Storage::disk('public')->put('assets/images/game_data/game_data.json',json_encode($season));
+
+                    //zip the images under assets/images/game_data folder
+                    $this->ZipFolder(public_path('assets/images/game_data'),storage_path('app/game_data'));
+                    Storage::disk('public')->delete('assets/images/game_data/game_data.json');
                 }else{
                     $response['status'] = 'Season already activated';
                 }
@@ -556,6 +575,40 @@ class OnluckController extends Controller
             $response['status'] = 'Missing parameter id';
         }
         return json_encode($response);
+    }
+    private function ZipFolder($folderPath,$zipFileName){
+        // Get real path for our folder
+        $rootPath = realpath($folderPath);
+
+        // Initialize archive object
+        try{
+            $zip = new \ZipArchive();
+        }catch(\Exception $e){
+            error_log("ZipFolder".$e->getMessage());
+        }
+        $zip->open($zipFileName.'.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+
+        // Create recursive directory iterator
+        /** @var SplFileInfo[] $files */
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($rootPath),
+            \RecursiveIteratorIterator::LEAVES_ONLY
+        );
+        foreach ($files as $name => $file)
+        {
+            // Skip directories (they would be added automatically)
+            if (!$file->isDir())
+            {
+                // Get real and relative path for current file
+                $filePath = $file->getRealPath();
+                $relativePath = substr($filePath, strlen($rootPath) + 1);
+
+                // Add current file to archive
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+        // Zip archive will be created only after closing object
+        $zip->close();
     }
     public function CreateOnluckMetadata(){
         $response = array();
@@ -767,12 +820,12 @@ class OnluckController extends Controller
 
         return json_encode($response);
     }
-    private function saveImageToStorage($image,$name){
+    private function saveImageToStorage($image,$name,$relative_path=""){
         $name = $name.'.'.$image->getClientOriginalExtension();
-        $destinationPath = public_path('/assets/images');
+        $destinationPath = public_path('/assets/images'.$relative_path);
         $image->move($destinationPath, $name);
-        error_log("Saved image $name to $destinationPath");
-        return "/assets/images/".$name;
+        error_log("Saved image ".$destinationPath."/".$name);
+        return "/assets/images".$relative_path."/".$name;
     }
     public function CreatePack(Request $request){
         $response = array();
@@ -786,7 +839,7 @@ class OnluckController extends Controller
                     $pack->title = $request->title;
                     $pack->sub_text = $request->sub_text;
                     $pack->icon = $request->has('icon')
-                        ?$this->saveImageToStorage($request->file('icon'),"icon_".time())
+                        ?$this->saveImageToStorage($request->file('icon'),"icon_".time(),"/game_data")
                         :$this->DEFAULT_PROFILE_PICTURE;
                     $pack->question_type = $request->question_type;
                     $pack->save();
@@ -818,8 +871,10 @@ class OnluckController extends Controller
                 $pack->title = $request->title;
                 $pack->sub_text = $request->sub_text;
                 if($request->has('icon')){
-                    unlink(public_path($pack->icon));
-                    $pack->icon = $this->saveImageToStorage($request->file('icon'),"icon_".time());
+                    try{
+                        unlink(public_path($pack->icon));
+                    }catch(\Exception $e){error_log($e->getMessage());}
+                    $pack->icon = $this->saveImageToStorage($request->file('icon'),"icon_".time(),"/game_data");
                 }
                 $pack->save();
 
@@ -862,7 +917,7 @@ class OnluckController extends Controller
                         if($request->has("images")){
                             $images = array();
                             foreach($request->images as $key=>$image){
-                                array_push($images,$this->saveImageToStorage($image,"question_image_".time().$key));
+                                array_push($images,$this->saveImageToStorage($image,"question_image_".time().$key,"/game_data"));
                             }
                             $imagesPath = json_encode($images);
                         }    
@@ -931,7 +986,8 @@ class OnluckController extends Controller
                         $images = array();
                         if($request->has("images")){
                             foreach($request->images as $key=>$image){
-                                array_push($images,$this->saveImageToStorage($image,"question_image_".time().$key));
+                                error_log("save here");
+                                array_push($images,$this->saveImageToStorage($image,"question_image_".time().$key,"/game_data"));
                             }
                         }    
                         if($request->question_type==0){
@@ -949,7 +1005,7 @@ class OnluckController extends Controller
                                         try{
                                             unlink(public_path($existingImages[$index]));
                                         }catch(\Exception $e){
-
+                                            error_log($e->getMessage());
                                         }
                                         unset($existingImages[$index]);
                                     }
@@ -978,6 +1034,7 @@ class OnluckController extends Controller
                                         try{
                                             unlink(public_path($existingImages[$index]));
                                         }catch(\Exception $e){
+                                            error_log($e->getMessage());
                                         }
                                         unset($existingImages[$index]);
                                     }
@@ -1156,28 +1213,35 @@ class OnluckController extends Controller
         return json_encode($response);
     }
     public function DownloadGameData(){
-        $response = array();
-        $response['status']="OK";
-        $metadata = $this->getMetadata();
-        if($metadata->active_season != 0){
-            $season = Season::find($metadata->active_season);
-            unset($season->created_at);
-            unset($season->updated_at);
-            $packs = Pack::select(['id','season_id','title','sub_text','icon','question_type'])
-                ->where('season_id',$season->id)->get();
-            foreach ($packs as $pack){
-                if($pack->question_type=="0"){
-                    $pack->typed_questions = TypedQuestion::where('pack_id',$pack->id)->get();
-                }else if($pack->question_type=="1"){
-                    $pack->mcq_questions = McqQuestion::where('pack_id',$pack->id)->get();
-                }
-            }
-            $season->packs = $packs;
-            $response['data'] = $season;
-        }else{
-            $response['status']="Season not found";
-        }
-        return json_encode($response);
+        return response()->download(storage_path('app/game_data.zip'));
+        // $response = array();
+        // $response['status']="OK";
+
+        // try{
+        //     $response['data']= json_decode(Storage::disk('local')->get('game_data.json'));
+        // }catch(\Exception $e){
+        //     $response['status'] = $e->getMessage();
+        // }
+
+        // $metadata = $this->getMetadata();
+        // if($metadata->active_season != 0){
+            // $season = Season::find($metadata->active_season);
+            // unset($season->created_at);
+            // unset($season->updated_at);
+            // $packs = Pack::select(['id','season_id','title','sub_text','icon','question_type'])
+            //     ->where('season_id',$season->id)->get();
+            // foreach ($packs as $pack){
+            //     if($pack->question_type=="0"){
+            //         $pack->typed_questions = TypedQuestion::where('pack_id',$pack->id)->get();
+            //     }else if($pack->question_type=="1"){
+            //         $pack->mcq_questions = McqQuestion::where('pack_id',$pack->id)->get();
+            //     }
+            // }
+            // $season->packs = $packs;
+        //      = $season;
+        // }else{
+        //     $response['status']="Season not found";
+        // }
     }
 
     public function GetPlayingData(Request $request){

@@ -287,6 +287,16 @@ public class Utils /*: MonoBehaviour*/
         }
         return default(T);
     }
+    public T LoadFileToObjectNoWrapping<T>(string fileName)
+    {
+        if (File.Exists(root + "/" + fileName))
+        {
+            string jsonData = File.ReadAllText(root + "/" + fileName);
+            Debug.Log(fileName+" Loaded json: " + jsonData);
+            return JsonUtility.FromJson<T>(jsonData);
+        }
+        return default(T);
+    }
     public void SaveBytesToFile(byte[]bytes,string fileName)
     {
         Debug.Log("Saved file to: " + root+ "/" + fileName);

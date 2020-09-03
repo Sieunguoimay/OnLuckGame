@@ -1,6 +1,6 @@
 {
-	"base_url":"http://509d6c666e4e.ngrok.io",
-	"base_api_url":"http://509d6c666e4e.ngrok.io/api/onluck",
+	"base_url":"localhost:8000",
+	"base_api_url":"localhost:8000/api/onluck",
 	"strings": {
 		"login": "Đăng Nhập",
 		"logout": "Đăng Xuất",

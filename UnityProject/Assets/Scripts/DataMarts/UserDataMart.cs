@@ -94,6 +94,7 @@ namespace Assets.Scripts.DataMarts
             }
             Debug.Log("Goto manual login");
         }
+        public bool userDataChanged { get; private set; } = false;
 
         public void SetUserData(UserData userData)
         {
@@ -101,6 +102,7 @@ namespace Assets.Scripts.DataMarts
             //and trigger the UserDataReadyCallback
             //m_isUserDataValid = true;
             m_userData = userData;
+            userDataChanged = true;
         }
 
         public void NotifyNewData(bool isFinal = false,bool isNotifyPrivately = false)

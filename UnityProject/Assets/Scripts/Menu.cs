@@ -79,6 +79,7 @@ public class Menu : MonoBehaviour
     public Text UiAskForPermissionText;
 
     public Text UiQuoteText;
+    public Text UiLogText;
 
     private bool pressOneMoreTimeToExit;
     void Awake()
@@ -90,6 +91,7 @@ public class Menu : MonoBehaviour
         Utils.Instance.Init(this);
         Main.Instance.Init(this);
         UiSpinner.SetActive(false);
+        UiLogText.gameObject.SetActive(false);
 
         //signal this on returning from MainGameScene
         MainGamePresenter.Instance.outputPlayingDataNeuron.inputs[1].Signal();
@@ -533,37 +535,46 @@ public class Menu : MonoBehaviour
         UiSpinner.transform.localPosition = Vector2.zero;
         UiSpinner.SetActive(true);
     }
+    private int spinnerIndex = -1;
     public void HideSpinner()
     {
         //foreach (Transform child in UiSpinner.transform.parent.transform)
         //    child.gameObject.SetActive(true);
-
-        UiSpinner.transform.SetParent(transform);
-        UiSpinner.SetActive(false);
-        getPanelById(m_currentPanelId).SetActive(true);
+        if(spinnerIndex==0|| spinnerIndex == 1)
+        {
+            UiSpinner.transform.SetParent(transform);
+            UiSpinner.SetActive(false);
+            getPanelById(m_currentPanelId).SetActive(true);
+        }
     }
     public void ShowSpinnerAtPopupPanel()
     {
+        spinnerIndex = 0;
         SetSpinnerTo(UiPopupPanel);
         getPanelById(m_currentPanelId).SetActive(false);
     }
     public void ShowSpinnerOverTheScene()
     {
+        spinnerIndex = 1;
         UiSpinner.SetActive(true);
     }
-    public void ToggleSpinnerAtLoginButtonPanel(bool state)
+    public void ToggleSpinnerAtLoginButtonPanel(bool state, int index = 2)
     {
         Debug.Log("ToggleSpinnerAtLoginButtonPanel " + state);
         if (state)
         {
+            spinnerIndex = index;
             SetSpinnerTo(UiLoginButtonContentPanel.transform.parent.gameObject);
             UiLoginButtonContentPanel.SetActive(false);
         }
         else
         {
-            UiLoginButtonContentPanel.SetActive(true);
-            UiSpinner.transform.SetParent(transform);
-            UiSpinner.SetActive(false);
+            if (index == spinnerIndex)
+            {
+                UiLoginButtonContentPanel.SetActive(true);
+                UiSpinner.transform.SetParent(transform);
+                UiSpinner.SetActive(false);
+            }
         }
     }
     public void ShowGuidelinePanel(string title, string content)
@@ -683,5 +694,17 @@ public class Menu : MonoBehaviour
     public void SetQuoteText(string quote)
     {
         UiQuoteText.text = quote;
+    }
+    public void ShowLogText(string text)
+    {
+        if (!UiLogText.gameObject.activeSelf)
+        {
+            UiLogText.gameObject.SetActive(true);
+            UiLogText.text = text;
+        }
+    }
+    public void HideLogText()
+    {
+        UiLogText.gameObject.SetActive(false);
     }
 }

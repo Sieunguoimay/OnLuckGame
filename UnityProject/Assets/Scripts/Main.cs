@@ -41,6 +41,7 @@ namespace Assets.Scripts
             /*here we go. this is where we load everything once and for all...*/
             Debug.Log("Never go here again until u reopen the app");
 
+            //Debug.logger.logEnabled = false;
 
             //firstly, we try to login here. by asking the local to find the current user.
             //if not found any active user, then leave it to the unlogged in state

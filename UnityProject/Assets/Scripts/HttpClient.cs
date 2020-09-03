@@ -57,8 +57,8 @@ public class HttpClient
     public delegate void HttpClientResponseDataCallback<T>(T data);
 
 #if UNITY_EDITOR
-    public string BaseUrl = "http://onluck-the-game.herokuapp.com";
-    public string BaseApiUrl = "http://onluck-the-game.herokuapp.com/api/onluck";
+    public string BaseUrl = "localhost:8000";
+    public string BaseApiUrl = "localhost:8000/api/onluck";
 #else 
     public string BaseUrl = "http://onluck-the-game.herokuapp.com";
     public string BaseApiUrl = "http://onluck-the-game.herokuapp.com/api/onluck";

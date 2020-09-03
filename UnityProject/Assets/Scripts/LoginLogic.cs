@@ -95,7 +95,7 @@ namespace Assets.Scripts
                                         Debug.Log("Signed in with facebook. got the user_id, let's save the user data to local device");
                                         UserDataMart.Instance.SetUserData(fbUserData);
                                         UserDataMart.Instance.NotifyDataFromServerValid();
-                                        LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,false);
+                                        LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,true);
                                         Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
                                         if(fbLoginDoneCallback!=null)
                                             fbLoginDoneCallback(true);

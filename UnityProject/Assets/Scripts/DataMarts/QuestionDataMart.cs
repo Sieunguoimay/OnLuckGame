@@ -147,16 +147,15 @@ namespace Assets.Scripts.DataMarts
             if (onluckLocalMetadata.activation_code == metadata.activation_code)
             {
                 Debug.Log("You're good to go. let's go to load local question data ");
-                LocalProvider.Instance.LoadQuestionData((ss) =>
-                {
-                    season = ss;
+                season =  LocalProvider.Instance.LoadQuestionData();
+                if(season!=null) {
                     packs = season.packs;
 
                     Debug.Log("Loaded Question Data " + packs.Count);
                     progressPublisher.publishProgress(1.0f);
                     m_gameDataReadyCallback();
                     m_gameDataCompletedCallback();
-                });
+                }
             }
             else
             {
@@ -170,21 +169,40 @@ namespace Assets.Scripts.DataMarts
         public void OnPermissionGranted()
         {
             Debug.Log("Zeze PermissionGranted");
-            HttpClient.Instance.DownloadGameData((ss) => {
-                LocalProvider.Instance.ClearQuestionData();
+            m_gameDataCompletedCallback();
+            progressPublisher.publishProgress(1.0f);
 
+            GameObject gameDataDownloader = new GameObject("GameDataDownloader",typeof(GameDataDownloader));
+
+            LocalProvider.Instance.ClearQuestionData();
+            gameDataDownloader.GetComponent<GameDataDownloader>().progressCallback = MenuPresenter.Instance.DisplayDownloadProgress;
+            gameDataDownloader.GetComponent<GameDataDownloader>().onDoneCallback = (ss) => {
                 onluckLocalMetadata.activation_code = activationCode;
                 onluckLocalMetadata.season_name = ss.name;
                 season = ss;
                 packs = season.packs;
                 m_gameDataReadyCallback();
-            },()=> {
-                Debug.Log("Save the downloaded data");
-                progressPublisher.publishProgress(1.0f);
-                m_gameDataCompletedCallback();
-                LocalProvider.Instance.SaveQuestionData(season);
+                //LocalProvider.Instance.SaveQuestionData(season);
                 LocalProvider.Instance.SaveOnluckLocalMetadata(onluckLocalMetadata);
-            });
+                GameObject.Destroy(gameDataDownloader);
+                
+            };
+
+            //HttpClient.Instance.DownloadGameData((ss) => {
+            //    LocalProvider.Instance.ClearQuestionData();
+
+            //    onluckLocalMetadata.activation_code = activationCode;
+            //    onluckLocalMetadata.season_name = ss.name;
+            //    season = ss;
+            //    packs = season.packs;
+            //    m_gameDataReadyCallback();
+            //},()=> {
+            //    Debug.Log("Save the downloaded data");
+            //    progressPublisher.publishProgress(1.0f);
+            //    m_gameDataCompletedCallback();
+            //    LocalProvider.Instance.SaveQuestionData(season);
+            //    LocalProvider.Instance.SaveOnluckLocalMetadata(onluckLocalMetadata);
+            //});
         }
     }
 }

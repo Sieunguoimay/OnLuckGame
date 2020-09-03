@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using Assets.Scripts.DataMarts;
 using System.Drawing;
+using System;
 #if UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN
 using SFB;
 #endif
@@ -150,9 +151,9 @@ public class LocalProvider
     public void SaveUserData(UserDataMart.UserData newUserData, bool saveImages = true)
     {
         Debug.Log("userDataList.Count" + userDataList.Count);
-        int m_activeUserIndex = -1;
         if (saveImages)
         {
+            currentUserIndex = -1;
             bool isNewUserData = true;
             for (int i = 0; i < userDataList.Count; i++)
             {
@@ -165,7 +166,7 @@ public class LocalProvider
 
                     if (newUserData.texProfilePicture != null)
                         Utils.Instance.SaveBytesToFile(newUserData.texProfilePicture.EncodeToPNG(), Path.GetFileName(newUserData.profile_picture));
-                    m_activeUserIndex = i;
+                    currentUserIndex = i;
                     break;
                 }
             }
@@ -174,14 +175,13 @@ public class LocalProvider
             if (isNewUserData)
             {
                 userDataList.Add(newUserData);
-                m_activeUserIndex = userDataList.Count - 1;
+                currentUserIndex = userDataList.Count - 1;
                 //Utils.Instance.SaveObjectToFile(userDataList, "last_active_user.onluck");
                 Utils.Instance.SaveBytesToFile(newUserData.texProfilePicture.EncodeToPNG(), Path.GetFileName(newUserData.profile_picture));
             }
         }
 
-        Debug.Log("userDataList.Count" + userDataList.Count);
-        Utils.Instance.SaveObjectToFile(new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = m_activeUserIndex }, "user_list.json");
+        Utils.Instance.SaveObjectToFile(new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = currentUserIndex }, "user_list.json");
     }
     //byte[] textureBytes = Utils.Instance.LoadFileToBytes(Path.GetFileName(userData.profile_picture));
     //if (textureBytes != null)
@@ -190,7 +190,7 @@ public class LocalProvider
     //    userData.texProfilePicture.LoadImage(textureBytes);
     //}
 
-
+    private int currentUserIndex = -1;
     public delegate void LoadLocalDataCallback<T>(T data);
     public UserDataMart.UserData LoadUserData()
     {
@@ -201,10 +201,10 @@ public class LocalProvider
         }
         else
         {
+            currentUserIndex = data.extra_data;
             userDataList = data.data;
             foreach (UserDataMart.UserData userData in userDataList)
                 userData.texProfilePicture = Utils.Instance.LoadFileToTexture(Path.GetFileName(userData.profile_picture));
-
             if (data.extra_data != -1)
                 return userDataList[data.extra_data];
             else
@@ -226,9 +226,118 @@ public class LocalProvider
         Debug.Log("LocalProvider: Failed to load user data from local");
         return null;
     }
+    public QuestionDataMart.Season LoadQuestionData()
+    {
+        HttpClient.Season ss = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
+        if (ss == null)
+            return null;
+        QuestionDataMart.Season season = new QuestionDataMart.Season
+            {
+                id = ss.id,
+                name = ss.name,
+                from = ss.from,
+                to = ss.to,
+                packs = new List<QuestionDataMart.Pack>()
+            };
+
+        foreach (HttpClient.Pack p in ss.packs)
+        {
+            QuestionDataMart.Pack pack = new QuestionDataMart.Pack
+            {
+                id = p.id,
+                title = p.title,
+                sub_text = p.sub_text,
+                icon = new QuestionDataMart.Image() { path = p.icon },
+                question_type = Int32.Parse(p.question_type)
+            };
+
+            Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
+            pack.icon.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+            //if (pack.typed_questions.Count > 0) { 
+            //    pack.question_type = 0;
+            //}
+            //else if(pack.mcq_questions.Count>0)
+            //    pack.question_type = 1;
+            //else
+            //    pack.question_type = -1;
+            if (pack.question_type == 0)
+            {
+                pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
+                foreach (HttpClient.TypedQuestion q in p.typed_questions)
+                {
+                    QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion()
+                    {
+                        id = q.id,
+                        question = q.question,
+                        answer = q.answer,
+                        score = q.score,
+                        hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
+                        images = new List<QuestionDataMart.Image>()
+                    };
+                    List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+                    foreach (string image in images)
+                    {
+                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
+                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+                        {
+                            Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+                            question.images.Add(new QuestionDataMart.Image()
+                            {
+                                path = image,
+                                sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+                            });
+                        });
+                    }
+                    pack.typed_questions.Add(question);
+                }
+                //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
+            }
+            else if (pack.question_type == 1)
+            {
+                pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
+                foreach (HttpClient.McqQuestion q in p.mcq_questions)
+                {
+                    QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion()
+                    {
+                        id = q.id,
+                        question = q.question,
+                        choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
+                        answer = q.answer,
+                        time = q.time,
+                        score = q.score,
+                        hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
+                        images = new List<QuestionDataMart.Image>()
+                    };
+                    List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+                    foreach (string image in images)
+                    {
+                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+                        Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
+                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+                        {
+                            Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+                            question.images.Add(new QuestionDataMart.Image()
+                            {
+                                path = image,
+                                sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+                            });
+                        });
+                    }
+                    pack.mcq_questions.Add(question);
+                }
+            }
+            //Debug.Log("question_type: " 
+            //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
+            season.packs.Add(pack);
+        }
+        return season;
+    }
     public void LoadQuestionData(LoadLocalDataCallback<QuestionDataMart.Season> callback)
     {
-        QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>(QuestionDataMart.Instance.onluckLocalMetadata.season_name+".json");
+        QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>("game_data.json");
         foreach(QuestionDataMart.Pack pack in season.packs)
         {
             Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
@@ -279,33 +388,35 @@ public class LocalProvider
     }
     public void ClearQuestionData()
     {
-        QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>(QuestionDataMart.Instance.onluckLocalMetadata.season_name+".json");
-        Debug.Log("Let's clear them all " + QuestionDataMart.Instance.onluckLocalMetadata.season_name + ".json");
+        HttpClient.Season season = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
+        Debug.Log("ClearQuestionData::Let's clear them all " + QuestionDataMart.Instance.onluckLocalMetadata.season_name + ".json");
         if (season == null)
         {
-            Debug.Log("NOOOOOOOOOOO!!!!!!!");
+            Debug.Log("ClearQuestionData::No game_data.json exists");
             return;
         }
-        foreach (QuestionDataMart.Pack pack in season.packs)
+        foreach (HttpClient.Pack pack in season.packs)
         {
-            Utils.Instance.DeleteFile(Path.GetFileName(pack.icon.path));
-            if (pack.question_type == 0)
+            Utils.Instance.DeleteFile(Path.GetFileName(pack.icon));
+            if (pack.typed_questions != null)
             {
-                foreach (QuestionDataMart.TypedQuestion question in pack.typed_questions)
+                foreach (HttpClient.TypedQuestion question in pack.typed_questions)
                 {
-                    foreach (QuestionDataMart.Image image in question.images)
+                    List<string> images = Utils.Instance.FromJsonList<List<string>>(question.images);
+                    foreach (string image in images)
                     {
-                        Utils.Instance.DeleteFile(Path.GetFileName(image.path));
+                        Utils.Instance.DeleteFile(Path.GetFileName(image));
                     }
                 }
             }
-            else if (pack.question_type == 1)
+            else if (pack.mcq_questions != null)
             {
-                foreach (QuestionDataMart.MCQQuestion question in pack.mcq_questions)
+                foreach (HttpClient.McqQuestion question in pack.mcq_questions)
                 {
-                    foreach (QuestionDataMart.Image image in question.images)
+                    List<string> images = Utils.Instance.FromJsonList<List<string>>(question.images);
+                    foreach (string image in images)
                     {
-                        Utils.Instance.DeleteFile(Path.GetFileName(image.path));
+                        Utils.Instance.DeleteFile(Path.GetFileName(image));
                     }
                 }
             }

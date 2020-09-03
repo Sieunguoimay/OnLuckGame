@@ -78,6 +78,8 @@ public class MainGame : MonoBehaviour
 
         gameObject.AddComponent<AudioSource>().PlayOneShot(AssetsDataMart.Instance.panelOpenAudioClip);
         AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
+
+        Debug.Log("MainGame::Started");
     }
 
     // Update is called once per frame
