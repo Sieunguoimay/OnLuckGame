@@ -334,17 +334,19 @@ public class Utils /*: MonoBehaviour*/
     public delegate void LoadFileAsyncCallback(Texture2D texture);
     public void LoadTextureFileAsync(string fileName, LoadFileAsyncCallback callback)
     {
-        context.StartCoroutine(loadFileAsync(fileName,callback));
+        if(context!=null)
+            context.StartCoroutine(loadFileAsync(fileName,callback));
     }
 
     // Use this for initialization
     [Obsolete]
     IEnumerator loadFileAsync(string fileName, LoadFileAsyncCallback callback)
     {
-        Debug.Log("loadFileAsync");
+        Debug.Log("loadFileAsync: "+ root + "/" + fileName);
         WWW www = new WWW(root + "/" + fileName);
         while (!www.isDone) yield return null;
-        callback?.Invoke(www.texture);
+        if(callback!=null)
+            callback(www.texture);
     }
 
     public void SetAndStretchToParentSize(RectTransform _mRect, RectTransform _parent)

@@ -314,7 +314,7 @@ public class MainGame : MonoBehaviour
             //Texture2D texture = image.sprite.texture;
             GameObject newItem = Instantiate(UiImageItemTemplate) as GameObject;
             newItem.GetComponent<Image>().sprite = image.sprite;// Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
-            newItem.transform.SetParent(UiImageSlideshow.transform);
+            newItem.transform.parent = UiImageSlideshow.transform;
         });
         UiImageSlideshow.GetComponent<ImageSlideshow>().scrollbar.GetComponent<Scrollbar>().value = 0;
         UiImageSlideshow.GetComponent<ImageSlideshow>().scroll_pos = 0;

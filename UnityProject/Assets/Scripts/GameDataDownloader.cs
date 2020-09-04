@@ -17,7 +17,7 @@ public class GameDataDownloader : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        string url = "http://localhost:8000/api/onluck/downloadgamedata";
+        string url = AssetsDataMart.Instance.assetsData.base_api_url+"/downloadgamedata";
         www = new WWW(url);
         Debug.Log("GameDataDownloader::Start");
     }

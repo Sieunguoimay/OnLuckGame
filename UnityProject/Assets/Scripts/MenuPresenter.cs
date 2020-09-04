@@ -379,7 +379,7 @@ namespace Assets.Scripts
         public void DisplayDownloadProgress(string name, string unit, float downloaded, float total)
         {
             Debug.Log("MenuPresenter::DisplayDownloadProgress " + downloaded + " " + total);
-            rMenu.ShowLogText(name + (downloaded) +"/" + (total) + unit);
+            rMenu.ShowLogText(name + downloaded +"/" + total + unit);
         }
     }
 }
