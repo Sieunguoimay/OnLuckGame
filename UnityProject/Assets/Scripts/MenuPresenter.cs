@@ -378,8 +378,9 @@ namespace Assets.Scripts
         }
         public void DisplayDownloadProgress(string name, string unit, float downloaded, float total)
         {
-            Debug.Log("MenuPresenter::DisplayDownloadProgress " + downloaded + " " + total);
-            rMenu.ShowLogText(name + downloaded +"/" + total + unit);
+            //Debug.Log("MenuPresenter::DisplayDownloadProgress " + downloaded + " " + total);
+            string str = ""+name + ((int)downloaded).ToString() + "/" + ((int)total).ToString() + unit;
+            rMenu.ShowLogText(str);
         }
     }
 }

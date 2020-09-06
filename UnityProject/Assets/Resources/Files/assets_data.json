@@ -1,6 +1,6 @@
 {
-	"base_url":"http://b639d504f891.ngrok.io",
-	"base_api_url":"http://b639d504f891.ngrok.io/api/onluck",
+	"base_url":"http://d6fa961104d2.ngrok.io",
+	"base_api_url":"http://d6fa961104d2.ngrok.io/api/onluck",
 	"strings": {
 		"login": "Đăng Nhập",
 		"logout": "Đăng Xuất",

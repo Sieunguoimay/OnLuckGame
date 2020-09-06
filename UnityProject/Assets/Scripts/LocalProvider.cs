@@ -226,11 +226,16 @@ public class LocalProvider
         Debug.Log("LocalProvider: Failed to load user data from local");
         return null;
     }
-    public QuestionDataMart.Season LoadQuestionData()
+    public delegate void LoadQuestionDataCallback(QuestionDataMart.Season season);
+    public void LoadQuestionData(MonoBehaviour context, LoadQuestionDataCallback callback)
+    {
+        context.StartCoroutine(loadQuestionData(callback));
+    }
+    public IEnumerator loadQuestionData(LoadQuestionDataCallback callback)
     {
         HttpClient.Season ss = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
         if (ss == null)
-            return null;
+            yield return null;
         QuestionDataMart.Season season = new QuestionDataMart.Season
             {
                 id = ss.id,
@@ -280,15 +285,23 @@ public class LocalProvider
                         //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
                         //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
                         Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
-                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+
+                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
+                        question.images.Add(new QuestionDataMart.Image()
                         {
-                            Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
-                            question.images.Add(new QuestionDataMart.Image()
-                            {
-                                path = image,
-                                sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                            });
+                            path = image,
+                            sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
                         });
+
+                        //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+                        //{
+                        //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+                        //    question.images.Add(new QuestionDataMart.Image()
+                        //    {
+                        //        path = image,
+                        //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+                        //    });
+                        //});
                     }
                     pack.typed_questions.Add(question);
                 }
@@ -316,15 +329,21 @@ public class LocalProvider
                         //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
                         //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
                         Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
-                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
+                        question.images.Add(new QuestionDataMart.Image()
                         {
-                            Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
-                            question.images.Add(new QuestionDataMart.Image()
-                            {
-                                path = image,
-                                sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                            });
+                            path = image,
+                            sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
                         });
+                        //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+                        //{
+                        //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+                        //    question.images.Add(new QuestionDataMart.Image()
+                        //    {
+                        //        path = image,
+                        //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+                        //    });
+                        //});
                     }
                     pack.mcq_questions.Add(question);
                 }
@@ -333,7 +352,9 @@ public class LocalProvider
             //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
             season.packs.Add(pack);
         }
-        return season;
+        yield return null;
+        if(callback!=null)
+            callback(season);
     }
     public void LoadQuestionData(LoadLocalDataCallback<QuestionDataMart.Season> callback)
     {

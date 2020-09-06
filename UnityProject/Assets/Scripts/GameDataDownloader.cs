@@ -87,10 +87,12 @@ public class GameDataDownloader : MonoBehaviour
         }
         if (isUnzipped&&!isLoaded)
         {
-            season = LocalProvider.Instance.LoadQuestionData();
+            LocalProvider.Instance.LoadQuestionData(this,(ss)=> {
+                season = ss;
+                if (onDoneCallback != null)
+                    onDoneCallback(season);
+            });
             isLoaded = true;
-            if (onDoneCallback!=null)
-                onDoneCallback(season);
         }
     }
     private void SaveZipFileToLocal()

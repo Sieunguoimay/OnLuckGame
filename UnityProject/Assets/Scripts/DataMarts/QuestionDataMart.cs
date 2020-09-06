@@ -133,7 +133,7 @@ namespace Assets.Scripts.DataMarts
             //});
         }
 
-        public void SetFromServerOnluckMetadata(HttpClient.OnluckMetadata metadata)
+        public void SetFromServerOnluckMetadata(MonoBehaviour context,HttpClient.OnluckMetadata metadata)
         {
             progressPublisher.publishProgress(0.6f);
             if (onluckLocalMetadata.uptodate_token != metadata.uptodate_token)
@@ -147,15 +147,18 @@ namespace Assets.Scripts.DataMarts
             if (onluckLocalMetadata.activation_code == metadata.activation_code)
             {
                 Debug.Log("You're good to go. let's go to load local question data ");
-                season =  LocalProvider.Instance.LoadQuestionData();
-                if(season!=null) {
-                    packs = season.packs;
+                LocalProvider.Instance.LoadQuestionData(context,(ss)=> {
+                    season = ss;
+                    if (season != null)
+                    {
+                        packs = season.packs;
 
-                    Debug.Log("Loaded Question Data " + packs.Count);
-                    progressPublisher.publishProgress(1.0f);
-                    m_gameDataReadyCallback();
-                    m_gameDataCompletedCallback();
-                }
+                        Debug.Log("Loaded Question Data " + packs.Count);
+                        progressPublisher.publishProgress(1.0f);
+                        m_gameDataReadyCallback();
+                        m_gameDataCompletedCallback();
+                    }
+                });
             }
             else
             {

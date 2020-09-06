@@ -700,8 +700,8 @@ public class Menu : MonoBehaviour
         if (!UiLogText.gameObject.activeSelf)
         {
             UiLogText.gameObject.SetActive(true);
-            UiLogText.text = text;
         }
+        UiLogText.text = text;
     }
     public void HideLogText()
     {
