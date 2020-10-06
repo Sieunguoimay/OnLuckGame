@@ -123,9 +123,9 @@ namespace Assets.Scripts.DataMarts
             Debug.Log("User Data Loading");
         }
 
-        public void NotifyDataFromServerValid()
+        public void NotifyDataFromServerValid(bool valid = true)
         {
-            m_isUserDataValid = true;
+            m_isUserDataValid = valid;
             if(m_userDataFromServerReadyCallback!=null)
                 m_userDataFromServerReadyCallback();
             Debug.Log("User Data Loaded");

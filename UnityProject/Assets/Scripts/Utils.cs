@@ -141,6 +141,8 @@ public class Utils /*: MonoBehaviour*/
     public void PostRequest(string url, string str, RequestCallback callback)
     {
         Debug.Log("PostRequest" + url);
+        int session = 10;
+        str = "{\"session\":" + session + ",\"data\":" + str + "}";
         context.StartCoroutine(postRequest(url, str, callback));
     }
     IEnumerator postRequest(string url, string str, RequestCallback callback)

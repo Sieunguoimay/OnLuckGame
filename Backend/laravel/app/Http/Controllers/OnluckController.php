@@ -1332,4 +1332,30 @@ class OnluckController extends Controller
         error_log("StorePlayingData:Execution Time: ".(round(microtime(true) * 1000)-$startTime));
         return json_encode($response);
     }
+    public function GetQuestionById(Request $request){
+        $response = array();
+        $response["status"] = "OK";
+
+        if($request->has("id")){
+            if($request->has("type")){
+                $data = new \stdClass();
+                if($request->get("type")==0){
+                    $question = TypedQuestion::find($request->get("id"));
+                    $data->type = 0;
+                    $data->typed_question = $question;
+                }else if($request->get("type")==1){
+                    $question = McqQuestion::find($request->get("id"));
+                    $data->type = 1;
+                    $data->mcq_question = $question;
+                }
+                $response["data"] = $data;
+            }else{
+                $response["status"] = "Missing parameter type";
+            }
+        }else{
+            $response["status"] = "Missing parameter id";
+        }
+
+        return json_encode($response);
+    }
 }

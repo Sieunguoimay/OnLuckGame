@@ -226,24 +226,149 @@ public class LocalProvider
         Debug.Log("LocalProvider: Failed to load user data from local");
         return null;
     }
-    public delegate void LoadQuestionDataCallback(QuestionDataMart.Season season);
-    public void LoadQuestionData(MonoBehaviour context, LoadQuestionDataCallback callback)
+    //public delegate void LoadQuestionDataCallback(QuestionDataMart.Season season);
+    public void LoadQuestionData(MonoBehaviour context, Action<QuestionDataMart.Season> callback)
     {
         context.StartCoroutine(loadQuestionData(callback));
     }
-    public IEnumerator loadQuestionData(LoadQuestionDataCallback callback)
+    //public IEnumerator loadQuestionData(LoadQuestionDataCallback callback)
+    //{
+    //    HttpClient.Season ss = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
+    //    if (ss == null)
+    //        yield return null;
+    //    QuestionDataMart.Season season = new QuestionDataMart.Season
+    //        {
+    //            id = ss.id,
+    //            name = ss.name,
+    //            from = ss.from,
+    //            to = ss.to,
+    //            packs = new List<QuestionDataMart.Pack>()
+    //        };
+
+    //    foreach (HttpClient.Pack p in ss.packs)
+    //    {
+    //        QuestionDataMart.Pack pack = new QuestionDataMart.Pack
+    //        {
+    //            id = p.id,
+    //            title = p.title,
+    //            sub_text = p.sub_text,
+    //            icon = new QuestionDataMart.Image() { path = p.icon },
+    //            question_type = Int32.Parse(p.question_type)
+    //        };
+
+    //        Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
+    //        pack.icon.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+    //        //if (pack.typed_questions.Count > 0) { 
+    //        //    pack.question_type = 0;
+    //        //}
+    //        //else if(pack.mcq_questions.Count>0)
+    //        //    pack.question_type = 1;
+    //        //else
+    //        //    pack.question_type = -1;
+    //        if (pack.question_type == 0)
+    //        {
+    //            pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
+    //            foreach (HttpClient.TypedQuestion q in p.typed_questions)
+    //            {
+    //                QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion()
+    //                {
+    //                    id = q.id,
+    //                    question = q.question,
+    //                    answer = q.answer,
+    //                    score = q.score,
+    //                    hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
+    //                    images = new List<QuestionDataMart.Image>()
+    //                };
+    //                List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+    //                foreach (string image in images)
+    //                {
+    //                    //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
+
+    //                    Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
+    //                    question.images.Add(new QuestionDataMart.Image()
+    //                    {
+    //                        path = image,
+    //                        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+    //                    });
+
+    //                    //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+    //                    //{
+    //                    //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+    //                    //    question.images.Add(new QuestionDataMart.Image()
+    //                    //    {
+    //                    //        path = image,
+    //                    //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+    //                    //    });
+    //                    //});
+    //                }
+    //                pack.typed_questions.Add(question);
+    //            }
+    //            //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
+    //        }
+    //        else if (pack.question_type == 1)
+    //        {
+    //            pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
+    //            foreach (HttpClient.McqQuestion q in p.mcq_questions)
+    //            {
+    //                QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion()
+    //                {
+    //                    id = q.id,
+    //                    question = q.question,
+    //                    choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
+    //                    answer = q.answer,
+    //                    time = q.time,
+    //                    score = q.score,
+    //                    hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
+    //                    images = new List<QuestionDataMart.Image>()
+    //                };
+    //                List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+    //                foreach (string image in images)
+    //                {
+    //                    //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
+    //                    Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
+    //                    question.images.Add(new QuestionDataMart.Image()
+    //                    {
+    //                        path = image,
+    //                        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+    //                    });
+    //                    //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
+    //                    //{
+    //                    //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
+    //                    //    question.images.Add(new QuestionDataMart.Image()
+    //                    //    {
+    //                    //        path = image,
+    //                    //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
+    //                    //    });
+    //                    //});
+    //                }
+    //                pack.mcq_questions.Add(question);
+    //            }
+    //        }
+    //        //Debug.Log("question_type: " 
+    //        //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
+    //        season.packs.Add(pack);
+    //    }
+    //    yield return null;
+    //    if(callback!=null)
+    //        callback(season);
+    //}
+    public IEnumerator loadQuestionData(Action<QuestionDataMart.Season> callback)
     {
         HttpClient.Season ss = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
         if (ss == null)
             yield return null;
         QuestionDataMart.Season season = new QuestionDataMart.Season
-            {
-                id = ss.id,
-                name = ss.name,
-                from = ss.from,
-                to = ss.to,
-                packs = new List<QuestionDataMart.Pack>()
-            };
+        {
+            id = ss.id,
+            name = ss.name,
+            from = ss.from,
+            to = ss.to,
+            packs = new List<QuestionDataMart.Pack>()
+        };
 
         foreach (HttpClient.Pack p in ss.packs)
         {
@@ -258,155 +383,72 @@ public class LocalProvider
 
             Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
             pack.icon.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
-            //if (pack.typed_questions.Count > 0) { 
-            //    pack.question_type = 0;
-            //}
-            //else if(pack.mcq_questions.Count>0)
-            //    pack.question_type = 1;
-            //else
-            //    pack.question_type = -1;
-            if (pack.question_type == 0)
+            pack.questions = new List<QuestionDataMart.EmptyQuestion>();
+            foreach (HttpClient.TypedQuestion q in p.typed_questions)
             {
-                pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
-                foreach (HttpClient.TypedQuestion q in p.typed_questions)
+                QuestionDataMart.EmptyQuestion question = new QuestionDataMart.EmptyQuestion()
                 {
-                    QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion()
-                    {
-                        id = q.id,
-                        question = q.question,
-                        answer = q.answer,
-                        score = q.score,
-                        hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
-                        images = new List<QuestionDataMart.Image>()
-                    };
-                    List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                    foreach (string image in images)
-                    {
-                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
-
-                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
-                        question.images.Add(new QuestionDataMart.Image()
-                        {
-                            path = image,
-                            sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                        });
-
-                        //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
-                        //{
-                        //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
-                        //    question.images.Add(new QuestionDataMart.Image()
-                        //    {
-                        //        path = image,
-                        //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                        //    });
-                        //});
-                    }
-                    pack.typed_questions.Add(question);
-                }
-                //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
+                    id = q.id,
+                };
+                pack.questions.Add(question);
             }
-            else if (pack.question_type == 1)
-            {
-                pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
-                foreach (HttpClient.McqQuestion q in p.mcq_questions)
-                {
-                    QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion()
-                    {
-                        id = q.id,
-                        question = q.question,
-                        choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
-                        answer = q.answer,
-                        time = q.time,
-                        score = q.score,
-                        hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
-                        images = new List<QuestionDataMart.Image>()
-                    };
-                    List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                    foreach (string image in images)
-                    {
-                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync:" + image);
-                        Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image));
-                        question.images.Add(new QuestionDataMart.Image()
-                        {
-                            path = image,
-                            sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                        });
-                        //Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image), (t) =>
-                        //{
-                        //    Debug.Log("GameDataDownloader::Utils.Instance.LoadTextureFileAsync: Loaded" + image);
-                        //    question.images.Add(new QuestionDataMart.Image()
-                        //    {
-                        //        path = image,
-                        //        sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0))
-                        //    });
-                        //});
-                    }
-                    pack.mcq_questions.Add(question);
-                }
-            }
-            //Debug.Log("question_type: " 
-            //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
             season.packs.Add(pack);
         }
         yield return null;
-        if(callback!=null)
-            callback(season);
+        callback?.Invoke(season);
     }
-    public void LoadQuestionData(LoadLocalDataCallback<QuestionDataMart.Season> callback)
-    {
-        QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>("game_data.json");
-        foreach(QuestionDataMart.Pack pack in season.packs)
-        {
-            Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
-            pack.icon.sprite = Sprite.Create(texture,new Rect(0,0, texture.width, texture.height),new Vector2(0,0));
-            //if (pack.typed_questions.Count > 0) { 
-            //    pack.question_type = 0;
-            //}
-            //else if(pack.mcq_questions.Count>0)
-            //    pack.question_type = 1;
-            //else
-            //    pack.question_type = -1;
-            if(pack.question_type == 0)
-            {
-                foreach (QuestionDataMart.TypedQuestion question in pack.typed_questions)
-                {
-                    foreach(QuestionDataMart.Image image in question.images)
-                    {
-                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        Debug.Log("Utils.Instance.LoadTextureFileAsync:"+ image.path);
-                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
-                        {
-                            Debug.Log("Utils.Instance.LoadTextureFileAsync: Loaded"+ image.path);
-                            image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        });
-                    }
-                }
-                    //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
-            }else if(pack.question_type == 1)
-            {
-                foreach (QuestionDataMart.MCQQuestion question in pack.mcq_questions)
-                {
-                    foreach (QuestionDataMart.Image image in question.images)
-                    {
-                        //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
-                        {
-                            image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
-                        });
-                    }
-                }
-            }
-            //Debug.Log("question_type: " 
-            //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
-        }
-        callback(season);
-    }
+
+    //public void LoadQuestionData(LoadLocalDataCallback<QuestionDataMart.Season> callback)
+    //{
+    //    QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>("game_data.json");
+    //    foreach(QuestionDataMart.Pack pack in season.packs)
+    //    {
+    //        Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
+    //        pack.icon.sprite = Sprite.Create(texture,new Rect(0,0, texture.width, texture.height),new Vector2(0,0));
+    //        //if (pack.typed_questions.Count > 0) { 
+    //        //    pack.question_type = 0;
+    //        //}
+    //        //else if(pack.mcq_questions.Count>0)
+    //        //    pack.question_type = 1;
+    //        //else
+    //        //    pack.question_type = -1;
+    //        if(pack.question_type == 0)
+    //        {
+    //            foreach (QuestionDataMart.TypedQuestion question in pack.typed_questions)
+    //            {
+    //                foreach(QuestionDataMart.Image image in question.images)
+    //                {
+    //                    //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    Debug.Log("Utils.Instance.LoadTextureFileAsync:"+ image.path);
+    //                    Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
+    //                    {
+    //                        Debug.Log("Utils.Instance.LoadTextureFileAsync: Loaded"+ image.path);
+    //                        image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    });
+    //                }
+    //            }
+    //                //Debug.Log(question.id + " " + question.question + " " + question.images.Count);
+    //        }else if(pack.question_type == 1)
+    //        {
+    //            foreach (QuestionDataMart.MCQQuestion question in pack.mcq_questions)
+    //            {
+    //                foreach (QuestionDataMart.Image image in question.images)
+    //                {
+    //                    //Texture2D t = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    //image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    Utils.Instance.LoadTextureFileAsync(Path.GetFileName(image.path), (t) =>
+    //                    {
+    //                        image.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0, 0));
+    //                    });
+    //                }
+    //            }
+    //        }
+    //        //Debug.Log("question_type: " 
+    //        //    + pack.question_type +" "+ pack.typed_questions.Count +" "+pack.mcq_questions.Count);
+    //    }
+    //    callback(season);
+    //}
     public void ClearQuestionData()
     {
         HttpClient.Season season = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
@@ -444,37 +486,37 @@ public class LocalProvider
         }
         Utils.Instance.DeleteFile(season.name+".json");
     }
-    public void SaveQuestionData(QuestionDataMart.Season season)
-    {
-        foreach (QuestionDataMart.Pack pack in season.packs)
-        {
-            Utils.Instance.SaveBytesToFile(pack.icon.sprite.texture.EncodeToPNG(), Path.GetFileName(pack.icon.path));
-            //pack.icon.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
-            if (pack.question_type == 0)
-            {
-                foreach (QuestionDataMart.TypedQuestion question in pack.typed_questions)
-                {
-                    foreach (QuestionDataMart.Image image in question.images)
-                    {
-                        //image.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        Utils.Instance.SaveBytesToFile(image.sprite.texture.EncodeToPNG(), Path.GetFileName(image.path));
-                    }
-                }
-            }
-            else if (pack.question_type == 1)
-            {
-                foreach (QuestionDataMart.MCQQuestion question in pack.mcq_questions)
-                {
-                    foreach (QuestionDataMart.Image image in question.images)
-                    {
-                        //image.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
-                        Utils.Instance.SaveBytesToFile(image.sprite.texture.EncodeToPNG(), Path.GetFileName(image.path));
-                    }
-                }
-            }
-        }
-        Utils.Instance.SaveObjectToFile(season,season.name+".json");// new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = m_activeUserIndex }, "user_list.json");
-    }
+    //public void SaveQuestionData(QuestionDataMart.Season season)
+    //{
+    //    foreach (QuestionDataMart.Pack pack in season.packs)
+    //    {
+    //        Utils.Instance.SaveBytesToFile(pack.icon.sprite.texture.EncodeToPNG(), Path.GetFileName(pack.icon.path));
+    //        //pack.icon.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
+    //        if (pack.question_type == 0)
+    //        {
+    //            foreach (QuestionDataMart.TypedQuestion question in pack.typed_questions)
+    //            {
+    //                foreach (QuestionDataMart.Image image in question.images)
+    //                {
+    //                    //image.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    Utils.Instance.SaveBytesToFile(image.sprite.texture.EncodeToPNG(), Path.GetFileName(image.path));
+    //                }
+    //            }
+    //        }
+    //        else if (pack.question_type == 1)
+    //        {
+    //            foreach (QuestionDataMart.MCQQuestion question in pack.mcq_questions)
+    //            {
+    //                foreach (QuestionDataMart.Image image in question.images)
+    //                {
+    //                    //image.texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(image.path));
+    //                    Utils.Instance.SaveBytesToFile(image.sprite.texture.EncodeToPNG(), Path.GetFileName(image.path));
+    //                }
+    //            }
+    //        }
+    //    }
+    //    Utils.Instance.SaveObjectToFile(season,season.name+".json");// new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = m_activeUserIndex }, "user_list.json");
+    //}
     public QuestionDataMart.OnluckLocalMetadata LoadOnluckLocalMetadata()
     {
         return Utils.Instance.LoadFileToObject<QuestionDataMart.OnluckLocalMetadata>("onluck.json");

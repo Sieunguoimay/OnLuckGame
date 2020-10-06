@@ -287,6 +287,13 @@ public class HttpClient
         public string hints;
     }
     [System.Serializable]
+    public class QuestionWrapper
+    {
+        public int type;
+        public TypedQuestion typed_question;
+        public McqQuestion mcq_question;
+    }
+    [System.Serializable]
     public class Pack
     {
         public int id;
@@ -307,130 +314,114 @@ public class HttpClient
         public string to;
         public List<Pack> packs;
     }
-    private int imagesToDownloadCount = 0;
-    private void signalImageDownloaded()
-    {
-        Debug.Log("signalImageDownloaded " + imagesToDownloadCount);
-        if (imagesToDownloadCount > 1)
-            imagesToDownloadCount--;
-        else 
-        {
-            if (downloadedCallback != null)
-            {
-                Debug.Log("FIRE " + imagesToDownloadCount);
-                downloadedCallback();
-                downloadedCallback = null;
-            }
-        }
-    }
-    public delegate void DownloadedCallback();
-    private DownloadedCallback downloadedCallback = null;
-    public void DownloadGameData(HttpClientResponseDataCallback<QuestionDataMart.Season> callback, DownloadedCallback callback2)
-    {
-        downloadedCallback = callback2;
-        Utils.Instance.GetRequest(BaseApiUrl + "/downloadgamedata", (response) =>
-        {
-            Debug.Log(response);
-            imagesToDownloadCount = 0;
-            Response<Season> res = JsonUtility.FromJson<Response<Season>>(response);
-            if (res.status.Equals("OK"))
-            {
-                HttpClient.Season ss = res.data;
-                QuestionDataMart.Season season = new QuestionDataMart.Season
-                {
-                    id = ss.id,
-                    name = ss.name,
-                    from = ss.from,
-                    to = ss.to,
-                    packs = new List<QuestionDataMart.Pack>()
-                };
-                foreach (HttpClient.Pack p in ss.packs)
-                {
-                    QuestionDataMart.Pack pack = new QuestionDataMart.Pack
-                    {
-                        id = p.id,
-                        title = p.title,
-                        sub_text = p.sub_text,
-                        icon = new QuestionDataMart.Image() { path = p.icon }
-                    };
-                    imagesToDownloadCount += 1;
-                    Utils.Instance.LoadImage(BaseUrl + pack.icon.path,(texture)=> { 
-                        Debug.Log("Downloaded "+ pack.icon.path); 
-                        pack.icon.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0)); 
-                        signalImageDownloaded(); });
-                    pack.question_type = Int32.Parse(p.question_type);
+    //public delegate void DownloadedCallback();
+    //private DownloadedCallback downloadedCallback = null;
+    //public void DownloadGameData(HttpClientResponseDataCallback<QuestionDataMart.Season> callback, DownloadedCallback callback2)
+    //{
+    //    downloadedCallback = callback2;
+    //    Utils.Instance.GetRequest(BaseApiUrl + "/downloadgamedata", (response) =>
+    //    {
+    //        Debug.Log(response);
+    //        imagesToDownloadCount = 0;
+    //        Response<Season> res = JsonUtility.FromJson<Response<Season>>(response);
+    //        if (res.status.Equals("OK"))
+    //        {
+    //            HttpClient.Season ss = res.data;
+    //            QuestionDataMart.Season season = new QuestionDataMart.Season
+    //            {
+    //                id = ss.id,
+    //                name = ss.name,
+    //                from = ss.from,
+    //                to = ss.to,
+    //                packs = new List<QuestionDataMart.Pack>()
+    //            };
+    //            foreach (HttpClient.Pack p in ss.packs)
+    //            {
+    //                QuestionDataMart.Pack pack = new QuestionDataMart.Pack
+    //                {
+    //                    id = p.id,
+    //                    title = p.title,
+    //                    sub_text = p.sub_text,
+    //                    icon = new QuestionDataMart.Image() { path = p.icon }
+    //                };
+    //                imagesToDownloadCount += 1;
+    //                Utils.Instance.LoadImage(BaseUrl + pack.icon.path,(texture)=> { 
+    //                    Debug.Log("Downloaded "+ pack.icon.path); 
+    //                    pack.icon.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0)); 
+    //                    signalImageDownloaded(); });
+    //                pack.question_type = Int32.Parse(p.question_type);
 
-                    if (pack.question_type == 0)
-                    {
-                        pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
-                        foreach (HttpClient.TypedQuestion q in p.typed_questions)
-                        {
-                            QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion
-                            {
-                                id = q.id,
-                                question = q.question,
-                                answer = q.answer,
-                                score = q.score,
-                                images = new List<QuestionDataMart.Image>()
-                            };
-                            List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                            imagesToDownloadCount += images.Count;
-                            foreach (string img in images)
-                            {
-                                QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
-                                question.images.Add(image);
-                                Utils.Instance.LoadImage(BaseUrl + img,(texture)=> { Debug.Log("Downloaded "+img);
-                                    image.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0));
-                                    /*image.texture = texture;*/ signalImageDownloaded(); });
-                            }
-                            question.hints = new List<string>();
-                            List<string> hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
-                            foreach (string hint in hints)
-                                question.hints.Add(hint);
-                            pack.typed_questions.Add(question);
-                        }
-                    }
-                    else if (pack.question_type == 1)
-                    {
-                        pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
-                        foreach (HttpClient.McqQuestion q in p.mcq_questions)
-                        {
-                            QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion
-                            {
-                                id = q.id,
-                                question = q.question,
-                                choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
-                                answer = q.answer,
-                                time = q.time,
-                                score = q.score,
-                                images = new List<QuestionDataMart.Image>()
-                            };
-                            List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                            imagesToDownloadCount += images.Count;
-                            foreach (string img in images)
-                            {
-                                QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
-                                question.images.Add(image);
-                                Utils.Instance.LoadImage(BaseUrl + img, (texture) => { Debug.Log("Downloaded " + img); 
-                                    image.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0));
-                                    signalImageDownloaded(); });
-                            }
-                            //question.hints = new List<string>();
-                            question.hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
-                            pack.mcq_questions.Add(question);
-                        }
-                    }
+    //                if (pack.question_type == 0)
+    //                {
+    //                    pack.typed_questions = new List<QuestionDataMart.TypedQuestion>();
+    //                    foreach (HttpClient.TypedQuestion q in p.typed_questions)
+    //                    {
+    //                        QuestionDataMart.TypedQuestion question = new QuestionDataMart.TypedQuestion
+    //                        {
+    //                            id = q.id,
+    //                            question = q.question,
+    //                            answer = q.answer,
+    //                            score = q.score,
+    //                            images = new List<QuestionDataMart.Image>()
+    //                        };
+    //                        List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+    //                        imagesToDownloadCount += images.Count;
+    //                        foreach (string img in images)
+    //                        {
+    //                            QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
+    //                            question.images.Add(image);
+    //                            Utils.Instance.LoadImage(BaseUrl + img,(texture)=> { Debug.Log("Downloaded "+img);
+    //                                image.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0));
+    //                                /*image.texture = texture;*/ signalImageDownloaded(); });
+    //                        }
+    //                        question.hints = new List<string>();
+    //                        List<string> hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
+    //                        foreach (string hint in hints)
+    //                            question.hints.Add(hint);
+    //                        pack.typed_questions.Add(question);
+    //                    }
+    //                }
+    //                else if (pack.question_type == 1)
+    //                {
+    //                    pack.mcq_questions = new List<QuestionDataMart.MCQQuestion>();
+    //                    foreach (HttpClient.McqQuestion q in p.mcq_questions)
+    //                    {
+    //                        QuestionDataMart.MCQQuestion question = new QuestionDataMart.MCQQuestion
+    //                        {
+    //                            id = q.id,
+    //                            question = q.question,
+    //                            choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
+    //                            answer = q.answer,
+    //                            time = q.time,
+    //                            score = q.score,
+    //                            images = new List<QuestionDataMart.Image>()
+    //                        };
+    //                        List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
+    //                        imagesToDownloadCount += images.Count;
+    //                        foreach (string img in images)
+    //                        {
+    //                            QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
+    //                            question.images.Add(image);
+    //                            Utils.Instance.LoadImage(BaseUrl + img, (texture) => { Debug.Log("Downloaded " + img); 
+    //                                image.sprite = Sprite.Create(texture,new Rect(0,0,texture.width,texture.height),new Vector2(0,0));
+    //                                signalImageDownloaded(); });
+    //                        }
+    //                        //question.hints = new List<string>();
+    //                        question.hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
+    //                        pack.mcq_questions.Add(question);
+    //                    }
+    //                }
 
-                    season.packs.Add(pack);
-                }
+    //                season.packs.Add(pack);
+    //            }
 
-                callback(season);
-            }
-            if (imagesToDownloadCount == 0)
-                signalImageDownloaded();
+    //            callback(season);
+    //        }
+    //        if (imagesToDownloadCount == 0)
+    //            signalImageDownloaded();
 
-        });
-    }
+    //    });
+    //}
 
     public void GetPlayingDataFromServer(HttpClientResponseCallback<PlayingDataMart.PlayingData> callback,int userId)
     {
@@ -449,6 +440,36 @@ public class HttpClient
             Debug.Log("SendQuestionPlayingDataToServer:" + response);
             Response<int> res = JsonUtility.FromJson<Response<int>>(response);
             callback(res);
+        });
+    }
+
+    public void GetQuestionById(int questionId, int type, Action<QuestionWrapper> callback)
+    {
+        Utils.Instance.GetRequest(BaseApiUrl + "/getquestionbyid?type=" + type + "&id=" + questionId, (response) => {
+            Debug.Log(response);
+            Response<QuestionWrapper> res = JsonUtility.FromJson<Response<QuestionWrapper>>(response);
+            if(res.status.Equals("OK"))
+                callback(res.data);
+            else
+                callback(null);
+        });
+    }
+    [Serializable]
+    class QuestionPlayingDataWrapper
+    {
+        public PlayingDataMart.QuestionPlayingData question_playing_data;
+        public int user_id;
+    }
+    public void NotifyServerOnQuestionAnswered(PlayingDataMart.QuestionPlayingData questionPlayingData, Action<int> callback)
+    {
+        int id = UserDataMart.Instance.m_userData.id;
+        var wrapper = new QuestionPlayingDataWrapper() { user_id = id, question_playing_data = questionPlayingData };
+        Utils.Instance.PostRequest(BaseApiUrl + "/submitquestionplayingdata", JsonUtility.ToJson(wrapper), (response) =>{
+            Response<int> res = JsonUtility.FromJson<Response<int>>(response);
+            if (res.status.Equals("OK"))
+                callback(res.data);
+            else 
+                callback(-1);
         });
     }
 }

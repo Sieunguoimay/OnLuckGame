@@ -44,6 +44,15 @@ namespace Assets.Scripts.DataMarts
             public Sprite sprite;
         }
         [Serializable]
+        public class EmptyQuestion
+        {
+            public int id;
+            //public string question;
+            //public List<Image> images;
+            //public int score;
+            //public List<string> hints;
+        }
+        [Serializable]
         public class Question
         {
             public int id;
@@ -65,6 +74,17 @@ namespace Assets.Scripts.DataMarts
             public int time;
             public string[] choices;
         }
+        //[Serializable]
+        //public class Pack
+        //{
+        //    public int id;
+        //    public string title;
+        //    public string sub_text;
+        //    public Image icon;
+        //    public List<TypedQuestion> typed_questions;
+        //    public List<MCQQuestion> mcq_questions;
+        //    public int question_type;
+        //}
         [Serializable]
         public class Pack
         {
@@ -72,12 +92,10 @@ namespace Assets.Scripts.DataMarts
             public string title;
             public string sub_text;
             public Image icon;
-            public List<TypedQuestion> typed_questions;
-            public List<MCQQuestion> mcq_questions;
+            public List<EmptyQuestion> questions;
             public int question_type;
         }
 
- 
         [Serializable]
         public class OnluckLocalMetadata
         {
@@ -147,7 +165,8 @@ namespace Assets.Scripts.DataMarts
             if (onluckLocalMetadata.activation_code == metadata.activation_code)
             {
                 Debug.Log("You're good to go. let's go to load local question data ");
-                LocalProvider.Instance.LoadQuestionData(context,(ss)=> {
+                LocalProvider.Instance.LoadQuestionData(context, (ss) =>
+                {
                     season = ss;
                     if (season != null)
                     {

@@ -48,7 +48,7 @@ public class FBLogin /*: MonoBehaviour*/
     public FBLoginCallback m_fbLoginCallback;
 
 
-    public void Init(FBSignInCallback callback)
+    public void Init(Action<bool> callback)
     {
         if (FB.IsInitialized)
         {
@@ -59,7 +59,7 @@ public class FBLogin /*: MonoBehaviour*/
             FB.Init(()=>InitCallback(callback), OnHideUnity);
         }
     }
-	private void InitCallback(FBSignInCallback callback){
+	private void InitCallback(Action<bool> callback){
 		if(FB.IsInitialized){
 			FB.ActivateApp();
 			Debug.Log("Initialized the Facebook SDK. Continue here..");
@@ -92,8 +92,8 @@ public class FBLogin /*: MonoBehaviour*/
     }
     //Called to login to facebook,
     //Signal out for the result.
-    public delegate void FBSignInCallback(bool status);
-    public void SignIn(FBSignInCallback callback)
+    //public delegate void FBSignInCallback(bool status);
+    public void SignIn(Action<bool> callback)
     {
         var permissions = new List<string>() { "public_profile", "email" };
         FB.LogInWithReadPermissions(permissions, (result)=>{
@@ -110,13 +110,13 @@ public class FBLogin /*: MonoBehaviour*/
                 /*Goto Main Menu*/
 
                 //m_fbLoginCallback(true);
-                callback(true);
+                callback?.Invoke(true);
             }
             else
             {
                 Debug.Log("User Cancelled login");
                 //m_fbLoginCallback(false);
-                callback(false);
+                callback?.Invoke(false);
             }
         });
     }

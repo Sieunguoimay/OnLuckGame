@@ -24,8 +24,8 @@ namespace Assets.Scripts
         private LoginLogic() { }
         /*End of Singleton Declaration*/
 
-        public FBLogin.FBSignInCallback fbLoginCallback = null;
-        public FBLogin.FBSignInCallback fbLoginDoneCallback = null;
+        public Action<bool> fbLoginCallback = null;
+        public Action<bool> fbLoginDoneCallback = null;
         public HttpClient.LoadDataFromServerCallback userDataFromServerCallback = null;
         public HttpClient.HttpClientResponseCallback<UserDataMart.UserData> checkForUptodateUserDataCallback = null;
         public LocalProvider.LoadLocalDataCallback<UserDataMart.UserData> loadLocalUserDataCallback = null;

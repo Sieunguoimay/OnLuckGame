@@ -212,8 +212,11 @@ public class Menu : MonoBehaviour
     {
         Debug.Log("OnScoreboardButtonClicked");
         ShowPopupPanel(6);
-        if(m_menuPresenter.ShowScoreboard())
+        if (m_menuPresenter.ShowScoreboard())
+        {
+            spinnerIndex = 6;
             SetSpinnerTo(getPanelById(6));
+        }
     }
     public void OnIntroButtonClicked()
     {
@@ -540,7 +543,7 @@ public class Menu : MonoBehaviour
     {
         //foreach (Transform child in UiSpinner.transform.parent.transform)
         //    child.gameObject.SetActive(true);
-        if(spinnerIndex==0|| spinnerIndex == 1)
+        if(spinnerIndex==0|| spinnerIndex == 1|| spinnerIndex == 6)
         {
             UiSpinner.transform.SetParent(transform);
             UiSpinner.SetActive(false);

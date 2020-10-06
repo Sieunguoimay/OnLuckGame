@@ -41,7 +41,7 @@ namespace Assets.Scripts
             /*here we go. this is where we load everything once and for all...*/
             Debug.Log("Never go here again until u reopen the app");
 
-            Debug.unityLogger.logEnabled = false;
+            //Debug.unityLogger.logEnabled = false;
 
             //firstly, we try to login here. by asking the local to find the current user.
             //if not found any active user, then leave it to the unlogged in state
@@ -104,10 +104,10 @@ namespace Assets.Scripts
             HttpClient.Instance.NotifyServerOnGameStart(UserDataMart.Instance.m_userData,
             (response) => {
                 Debug.Log("NotifyServerOnGameStart");
+                //1.get metadata
+                QuestionDataMart.Instance.SetFromServerOnluckMetadata(monoBehaviour,response.data.metadata);
                 if (response.status.Equals("OK"))
                 {
-                    //1.get metadata
-                    QuestionDataMart.Instance.SetFromServerOnluckMetadata(monoBehaviour,response.data.metadata);
                     //2.check for user uptodate
                     if (response.data.user_data.uptodate_token != UserDataMart.Instance.m_userData.uptodate_token)
                     {
@@ -134,6 +134,13 @@ namespace Assets.Scripts
                             parsePlayingDataNeuron.inputs[0].Signal();
                         }
                     }
+                }
+                else
+                {
+                    Debug.Log("User data invalid");
+                    //UserDataMart.Instance.SetUserData(new UserDataMart.UserData());
+                    //UserDataMart.Instance.NotifyDataFromServerValid(false);
+                    MenuPresenter.Instance.Logout();
                 }
             });
 

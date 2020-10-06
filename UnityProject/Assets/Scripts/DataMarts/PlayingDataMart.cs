@@ -135,16 +135,21 @@ namespace Assets.Scripts.DataMarts
                 Pack pack = new Pack() { id = p.id };
                 pack.playingQuestions = new List<QuestionPlayingData>();
                 pack.questionDictionary.Clear();
-                if (p.question_type == 0)
-                    p.typed_questions.ForEach((question) => {
-                        pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id=pack.id });
-                        pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
-                    });
-                else if (p.question_type == 1)
-                    p.mcq_questions.ForEach((question) => {
-                        pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id });
-                        pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
-                    });
+                p.questions.ForEach((question) => {
+                    pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id });
+                    pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
+                });
+
+                //if (p.question_type == 0)
+                //    p.typed_questions.ForEach((question) => {
+                //        pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id=pack.id });
+                //        pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
+                //    });
+                //else if (p.question_type == 1)
+                //    p.mcq_questions.ForEach((question) => {
+                //        pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id });
+                //        pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
+                //    });
                 playingPacks.Add(pack);
                 packDictionary.Add(pack.id, playingPacks.Count - 1);
             });
