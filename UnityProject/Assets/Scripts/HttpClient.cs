@@ -455,21 +455,22 @@ public class HttpClient
         });
     }
     [Serializable]
-    class QuestionPlayingDataWrapper
+    public class SubmittingResponse
     {
-        public PlayingDataMart.QuestionPlayingData question_playing_data;
-        public int user_id;
+        public int playing_data_uptodate_token;
+        public int score;
     }
-    public void NotifyServerOnQuestionAnswered(PlayingDataMart.QuestionPlayingData questionPlayingData, Action<int> callback)
+    public void SubmitQuestionPlayingData(PlayingDataMart.QuestionPlayingData questionPlayingData, Action<SubmittingResponse> callback)
     {
-        int id = UserDataMart.Instance.m_userData.id;
-        var wrapper = new QuestionPlayingDataWrapper() { user_id = id, question_playing_data = questionPlayingData };
-        Utils.Instance.PostRequest(BaseApiUrl + "/submitquestionplayingdata", JsonUtility.ToJson(wrapper), (response) =>{
-            Response<int> res = JsonUtility.FromJson<Response<int>>(response);
+        string json = "{\"question_playing_data\":"+JsonUtility.ToJson(questionPlayingData)+"}";
+        Debug.Log("submitquestionplayingdata: " + json);
+        Utils.Instance.PostRequest(BaseApiUrl + "/submitquestionplayingdata", json, (response) =>{
+            Debug.Log(response);
+            Response<SubmittingResponse> res = JsonUtility.FromJson<Response<SubmittingResponse>>(response);
             if (res.status.Equals("OK"))
                 callback(res.data);
-            else 
-                callback(-1);
+            else
+                callback(null);
         });
     }
 }

@@ -48,6 +48,7 @@ namespace Assets.Scripts.DataMarts
             public List<int> current_question_indices;//pack index
 
 
+            //public List<List<Pack>> playing_packs;//get from active_questions table
             public List<QuestionPlayingData> playing_questions;//get from active_questions table
             public List<ActiveTime> active_times;
         }
@@ -136,7 +137,7 @@ namespace Assets.Scripts.DataMarts
                 pack.playingQuestions = new List<QuestionPlayingData>();
                 pack.questionDictionary.Clear();
                 p.questions.ForEach((question) => {
-                    pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id });
+                    pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id ,playing_data_id = playingData.id});
                     pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
                 });
 
@@ -154,7 +155,11 @@ namespace Assets.Scripts.DataMarts
                 packDictionary.Add(pack.id, playingPacks.Count - 1);
             });
             /*Let's make it real*/
-            Debug.Log("playingData.playing_questions.Count: " + playingData.playing_questions.Count);
+            //playingData.playing_packs.ForEach((playingPack) =>
+            //{
+
+            //});
+            //Debug.Log("playingData.playing_questions.Count: " + playingData.playing_questions.Count);
             playingData.playing_questions.ForEach((questionPlayingData) =>
             {
                 int value;
@@ -164,7 +169,7 @@ namespace Assets.Scripts.DataMarts
                     if (pack.questionDictionary.TryGetValue(questionPlayingData.question_id, out value))
                     {
                         // Key was in dictionary; "value" contains corresponding value
-                        Debug.Log("pack.playingQuestions[value] = questionPlayingData: " + questionPlayingData.pack_id + " " + questionPlayingData.question_id);
+                        //Debug.Log("pack.playingQuestions[value] = questionPlayingData: " + questionPlayingData.pack_id + " " + questionPlayingData.question_id);
                         pack.playingQuestions[value] = questionPlayingData;
                     }
                     else

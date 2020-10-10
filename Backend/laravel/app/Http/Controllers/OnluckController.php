@@ -1255,9 +1255,17 @@ class OnluckController extends Controller
                 if($playingData!=null){
                     $playingData->current_question_indices = CurrentQuestionIndex::where('playing_data_id',$playingData->id)->whereIn('pack_id',$packs)->pluck('index');
                     $playingData->playing_questions = 
-                        QuestionPlayingData::select(['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score'])
+                        QuestionPlayingData::select(
+                            ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score'])
                             ->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])->get();
-                }else{
+                    $playingData->playing_packs =         
+                        QuestionPlayingData::select(
+                            ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score'])
+                            ->groupBy('pack_id')
+                            ->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])
+                            ->orderBy('id')
+                            ->get();
+            }else{
                     $playingData = new PlayingData();
                     $playingData->user_id = $request->user_id;
                     $playingData->total_score = 0;
@@ -1292,6 +1300,7 @@ class OnluckController extends Controller
                         $playingData->save();
                         $response['data']=$playingData->uptodate_token;
                     }
+
                     $index = CurrentQuestionIndex::where(
                         [['pack_id','=',$request->pack_id],['playing_data_id','=',$request->playing_data_id]])->first();
                     if($index==null){
@@ -1302,6 +1311,8 @@ class OnluckController extends Controller
                     }
                     $index->index = $request->index;
                     $index->save();
+
+                    if($request->modified_questions!=null)
                     foreach($request->modified_questions as $modified_question){
                         if($modified_question['id']==0){
                         //new playing question
@@ -1330,6 +1341,47 @@ class OnluckController extends Controller
             $response['status']='Missing parameter playing_data_id';
         }
         error_log("StorePlayingData:Execution Time: ".(round(microtime(true) * 1000)-$startTime));
+        return json_encode($response);
+    }
+    public function SubmitQuestionPlayingData(Request $request){
+        $response = array();
+        $response["status"] = "OK";
+        if($request->has("question_playing_data")){
+
+            $questionPlayingData = $request->question_playing_data;
+            $playingDataId = $questionPlayingData['playing_data_id'];
+
+            $playingData = PlayingData::find($playingDataId);
+            if($playingData){
+                $playingData->total_score += $questionPlayingData['score'];
+                $playingData->uptodate_token = time();
+                $playingData->save();
+
+                $data = new \stdClass();
+                $data->playing_data_uptodate_token=$playingData->uptodate_token;
+                $data->score=$playingData->total_score;
+                $response["data"] = $data;
+            }
+
+            if($questionPlayingData['id']==0)
+                $playingQuestion = new QuestionPlayingData();
+            else
+                $playingQuestion = QuestionPlayingData::find($questionPlayingData['id']);
+            $playingQuestion->playing_data_id = $questionPlayingData['playing_data_id'];
+            $playingQuestion->season_id = $this->getMetadata()->active_season;
+            $playingQuestion->pack_id = $questionPlayingData['pack_id'];
+            $playingQuestion->question_id = $questionPlayingData['question_id'];
+            $playingQuestion->status = $questionPlayingData['status'];
+            $playingQuestion->started = $questionPlayingData['started'];
+            $playingQuestion->ended = $questionPlayingData['ended'];
+            $playingQuestion->used_hint_count = $questionPlayingData['used_hint_count'];
+            $playingQuestion->score = $questionPlayingData['score'];
+            $playingQuestion->save();
+
+            error_log("Question playing data saved ".$playingQuestion->id);
+        }else{
+            $response["status"] = "Missing parameter question_playing_data";
+        }
         return json_encode($response);
     }
     public function GetQuestionById(Request $request){

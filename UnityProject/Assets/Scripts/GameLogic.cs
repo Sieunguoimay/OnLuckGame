@@ -56,7 +56,7 @@ namespace Assets.Scripts
                     Debug.Log("playingQuestion.started " + playingQuestion.started);
                 }
             }
-            public void TerminateQuestionData(PlayingDataMart.QuestionPlayingData playingQuestion,char status)
+            public void TerminateQuestionData(PlayingDataMart.QuestionPlayingData playingQuestion,char status, bool isTypingQuestion = false)
             {
                 if (playingQuestion.status == 'a')
                 {
@@ -66,6 +66,13 @@ namespace Assets.Scripts
                     playingQuestion.dirtyFlag = true;
                     dirtyFlag = true;
                     Debug.Log("playingQuestion.ended " + playingQuestion.ended);
+
+                    if(status == 'c'|| !isTypingQuestion)
+                        HttpClient.Instance.SubmitQuestionPlayingData(playingQuestion, (response) =>
+                        {
+                            PlayingDataMart.Instance.playingData.uptodate_token = response.playing_data_uptodate_token;
+                            PlayingDataMart.Instance.playingData.total_score = response.score;
+                        });
                 }
             }
             public bool UnlockQuestionData(PlayingDataMart.QuestionPlayingData playingQuestion)
@@ -116,7 +123,7 @@ namespace Assets.Scripts
                 if (playingQuestion.dirtyFlag)
                 {
                     //send this one to server pls
-                    playingData.modified_questions.Add(playingQuestion);
+                    //playingData.modified_questions.Add(playingQuestion);
 
                     bool newPlayingQuestion = true;
                     for(int i = 0; i< PlayingDataMart.Instance.playingData.playing_questions.Count; i++)
@@ -131,14 +138,17 @@ namespace Assets.Scripts
 
                 }
             });
-            HttpClient.Instance.SendQuestionPlayingDataToServer(playingData, (response) => {
-                if (response.status.Equals("OK"))
-                {
-                    Debug.Log("OnPlayingDataOutputted: Success");
-                    PlayingDataMart.Instance.playingData.uptodate_token = response.data;
-                    LocalProvider.Instance.SavePlayingData(PlayingDataMart.Instance.playingData);
-                }
-            });
+            Debug.Log("OnPlayingDataOutputted: Success");
+            LocalProvider.Instance.SavePlayingData(PlayingDataMart.Instance.playingData);
+
+            //HttpClient.Instance.SendQuestionPlayingDataToServer(playingData, (response) => {
+            //    if (response.status.Equals("OK"))
+            //    {
+            //        Debug.Log("OnPlayingDataOutputted: Success");
+            //        PlayingDataMart.Instance.playingData.uptodate_token = response.data;
+            //        LocalProvider.Instance.SavePlayingData(PlayingDataMart.Instance.playingData);
+            //    }
+            //});
         }
     }
 }

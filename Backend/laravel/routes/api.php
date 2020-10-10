@@ -61,3 +61,4 @@ Route::post('onluck/storeactivedata','OnluckController@StoreActiveData');
 
 
 Route::get('onluck/getquestionbyid','OnluckController@GetQuestionById');
+Route::post('onluck/submitquestionplayingdata','OnluckController@SubmitQuestionPlayingData');
