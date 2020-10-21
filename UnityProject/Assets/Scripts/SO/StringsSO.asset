@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fd7eb124e168884abb9005f38cba865, type: 3}
+  m_Name: StringsSO
+  m_EditorClassIdentifier: 
+  login: "\u0110\u0103ng Nh\u1EADp"
+  logout: "\u0110\u0103ng Xu\u1EA5t"
+  login_with_facebook: "Ti\u1EBFp t\u1EE5c v\u1EDBi Facebook"
+  sigup: "\u0110\u0103ng K\xFD"
+  upload_photo: "Ch\u1ECDn \u1EA3nh m\u1EDBi"
+  rename: "S\u1EEDa t\xEAn"
+  not_yet_loggedin: "B\u1EA1n ch\u01B0a \u0111\u0103ng nh\u1EADp!"
+  intro: "Gi\u1EDBi Thi\u1EC7u"
+  guideline: "H\u01B0\u1EDBng D\u1EABn"
+  scoreboard: "B\u1EA3ng X\u1EBFp H\u1EA1ng"
+  new_game_data_available: "\u0110\xE3 c\xF3 d\u1EEF li\u1EC7u m\u1EDBi cho game.
+    Vui l\xF2ng t\u1EA3i xu\u1ED1ng!"
+  no_internet: "Kh\xF4ng c\xF3 Internet!"
+  download: "T\u1EA3i Xu\u1ED1ng!"
+  try_again: "Th\u1EED L\u1EA1i"
+  startup_text_question_pack: "G\xF3i c\xE2u h\u1ECFi"
+  startup_text_question_no: "B\u1EA1n \u0111\xE3 m\u1EDF kh\xF3a c\xE2u s\u1ED1"
+  startup_text_complete: "B\u1EA1n \u0111\xE3 ho\xE0n th\xE0nh to\xE0n b\u1ED9 c\xE1c
+    c\xE2u h\u1ECFi!"
+  resume: "Ti\u1EBFp T\u1EE5c"
+  start: "B\u1EAFt \u0110\u1EA7u"
+  open: "M\u1EDF L\xEAn"
+  user_name: "Ch\u01B0a \u0111\u0103ng nh\u1EADp"
+  qoute_popup_title: "Danh ng\xF4n"
+  enter_new_password: "Nh\u1EADp m\u1EADt kh\u1EA9u m\u1EDBi"
+  congrate: "Xin Ch\xFAc M\u1EEBng!!\\n B\u1EA1n \u0111\xE3 ho\xE0n th\xE0nh g\xF3i
+    c\xE2u h\u1ECFi"
+  correct: "Ch\xEDnh X\xE1c!"
+  incorrect: "Kh\xF4ng Ch\xEDnh X\xE1c!"
+  next_question: "C\xE2u Ti\u1EBFp Theo"
+  the_answer_is: "\u0110\xE1p \xE1n l\xE0"
+  timeout: "H\u1EBFt Th\u1EDDi Gian"
+  press_one_more_time: "\u1EA4n th\xEAm m\u1ED9t l\u1EA7n n\u1EEFa \u0111\u1EC3 tho\xE1t"

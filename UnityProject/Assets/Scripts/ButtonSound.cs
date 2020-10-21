@@ -13,9 +13,9 @@ public class ButtonSound : MonoBehaviour
         GetComponent<Button>().onClick.AddListener(() => {
             if (Main.Instance.soundEnabled)
             {
-                if (AssetsDataMart.Instance.buttonClickAudioClip != null&&
+                if (AssetsDataMart.Instance.constantsSO.buttonClickAudioClip != null&&
                     AssetsDataMart.Instance.rAudioSource!=null)
-                    AssetsDataMart.Instance.rAudioSource.PlayOneShot(AssetsDataMart.Instance.buttonClickAudioClip);
+                    AssetsDataMart.Instance.rAudioSource.PlayOneShot(AssetsDataMart.Instance.constantsSO.buttonClickAudioClip);
             }
         });
     }

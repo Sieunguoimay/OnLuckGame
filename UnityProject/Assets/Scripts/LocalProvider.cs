@@ -137,6 +137,7 @@ public class LocalProvider
             playingDataList.Add(playingData);
         Utils.Instance.SaveObjectToFile(playingDataList, "playing_data_list.json");
     }
+
     public PlayingDataMart.PlayingData GetPlayingDataByUserId(int userId)
     {
         playingDataList = Utils.Instance.LoadFileToObject<List<PlayingDataMart.PlayingData>>("playing_data_list.json");
@@ -526,9 +527,9 @@ public class LocalProvider
         Utils.Instance.SaveObjectToFile<QuestionDataMart.OnluckLocalMetadata>(metadata,"onluck.json");
     }
 
-    public AssetsDataMart.AssetsData LoadAssetsData()
-    {
-        return JsonUtility.FromJson<AssetsDataMart.AssetsData>(((TextAsset)Resources.Load("Files/assets_data")).text);
-        // Utils.Instance.LoadFileToObject<AssetsDataMart.AssetsData>("assets_data.json");
-    }
+    //public AssetsDataMart.AssetsData LoadAssetsData()
+    //{
+    //    return JsonUtility.FromJson<AssetsDataMart.AssetsData>(((TextAsset)Resources.Load("Files/assets_data")).text);
+    //    // Utils.Instance.LoadFileToObject<AssetsDataMart.AssetsData>("assets_data.json");
+    //}
 }

@@ -14,6 +14,7 @@ public class Menu : MonoBehaviour
     public GameObject UiLoginButtonContentPanel;
     public GameObject UiQuestionPackItemPanel;
     public GameObject UiMenuPanel;
+
     public GameObject UiPopupPanelBackground;
     public GameObject UiPopupPanel;
 
@@ -146,7 +147,7 @@ public class Menu : MonoBehaviour
             if (!pressOneMoreTimeToExit)
             {
                 pressOneMoreTimeToExit = true;
-                Toast.Instance.Show(Canvas, AssetsDataMart.Instance.assetsData.strings.press_one_more_time, 3, () =>
+                Toast.Instance.Show(Canvas, AssetsDataMart.Instance.constantsSO.stringsSO.press_one_more_time, 3, () =>
                 {
                     pressOneMoreTimeToExit = false;
                 });
@@ -186,7 +187,7 @@ public class Menu : MonoBehaviour
     {
         IsNormalSignup = false;
         showSignupPanelWithPredataCallback = callback;
-        SetSignupStatusText(AssetsDataMart.Instance.assetsData.strings.enter_new_password);
+        SetSignupStatusText(AssetsDataMart.Instance.constantsSO.stringsSO.enter_new_password);
         UiSignupNameInputField.text = name;
         UiSignupEmailInputField.text = email;
         ShowPopupPanel(1);
@@ -205,7 +206,7 @@ public class Menu : MonoBehaviour
     public void OnGuidelineButtonClicked()
     {
         Debug.Log("OnGuidelineButtonClicked");
-        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.guideline, QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
+        ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.guideline, QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
         //ShowPopupPanel(5);
     }
     public void OnScoreboardButtonClicked()
@@ -222,7 +223,7 @@ public class Menu : MonoBehaviour
     {
         Debug.Log("OnIntroButtonClicked");
         //ShowPopupPanel(7);
-        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.intro, QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
+        ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.intro, QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
     }
 
     public void OnClosePupupButtonClicked()
@@ -305,7 +306,7 @@ public class Menu : MonoBehaviour
 
     public void OnQuotePanelClicked()
     {
-        ShowGuidelinePanel(AssetsDataMart.Instance.assetsData.strings.qoute_popup_title, UiQuoteText.text);
+        ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.qoute_popup_title, UiQuoteText.text);
     }
 
     public void ToggleUiAccordingToLoginState(bool state)
@@ -326,8 +327,8 @@ public class Menu : MonoBehaviour
         {
         }else
         {
-            UiAvatarImage.sprite = AssetsDataMart.Instance.defaultProfilePictureSprite;
-            UiUserNameText.text = AssetsDataMart.Instance.assetsData.strings.user_name;
+            UiAvatarImage.sprite = AssetsDataMart.Instance.constantsSO.defaultProfilePictureSprite;
+            UiUserNameText.text = AssetsDataMart.Instance.constantsSO.stringsSO.user_name;
             UiScoreText.text = 0.ToString();
         }
     }
@@ -508,12 +509,12 @@ public class Menu : MonoBehaviour
         if (state)
         {
             Debug.Log("Set Sound Button to Enabled");
-            UiSoundButton.sprite = AssetsDataMart.Instance.soundIconSprite;
+            UiSoundButton.sprite = AssetsDataMart.Instance.constantsSO.soundIconSprite;
         }
         else
         {
             Debug.Log("Set Sound Button to Disabled");
-            UiSoundButton.sprite = AssetsDataMart.Instance.soundOffIconSprite;
+            UiSoundButton.sprite = AssetsDataMart.Instance.constantsSO.soundOffIconSprite;
         }
     }
 
@@ -590,9 +591,9 @@ public class Menu : MonoBehaviour
     public void SetProfileButtonItemList(bool state)
     {
         string[] profileMenuButtonNames = { 
-            AssetsDataMart.Instance.assetsData.strings.upload_photo,
-            AssetsDataMart.Instance.assetsData.strings.rename,
-            AssetsDataMart.Instance.assetsData.strings.logout};
+            AssetsDataMart.Instance.constantsSO.stringsSO.upload_photo,
+            AssetsDataMart.Instance.constantsSO.stringsSO.rename,
+            AssetsDataMart.Instance.constantsSO.stringsSO.logout};
         UiProfileMenuGuessText.SetActive(false);
         if (state)
         {
@@ -674,18 +675,18 @@ public class Menu : MonoBehaviour
     public void ShowPopupToAskForPermission()
     {
         permissinPopupMode = 0;
-        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.assetsData.strings.download;
+        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.constantsSO.stringsSO.download;
         //"TAI XUONG";
-        UiAskForPermissionText.text = AssetsDataMart.Instance.assetsData.strings.new_game_data_available;
+        UiAskForPermissionText.text = AssetsDataMart.Instance.constantsSO.stringsSO.new_game_data_available;
         //"Da co du lieu moi cho game. Vui long tai xuong!";
         UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
     }
     public void ShowPopupCheckYourNetwork()
     {
         permissinPopupMode = 1;
-        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.assetsData.strings.try_again;
+        UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.constantsSO.stringsSO.try_again;
         //"THU LAI";
-        UiAskForPermissionText.text = AssetsDataMart.Instance.assetsData.strings.no_internet;
+        UiAskForPermissionText.text = AssetsDataMart.Instance.constantsSO.stringsSO.no_internet;
         //"Khong co internet!";
         UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
     }

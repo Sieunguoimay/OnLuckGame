@@ -5,6 +5,10 @@ UnityProject/build
 
 Designs/*.zip
 Designs/*.rar
+Designs/*.ppt
+*.xls
+*.ppt
+*.sql
 
 # Created by https://www.gitignore.io/api/laravel
 

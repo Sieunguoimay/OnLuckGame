@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InactiveGameObjectOnClickEvent : MonoBehaviour
+public class PopupController : MonoBehaviour
 {
-    public GameObject target;
     // Start is called before the first frame update
     void Start()
     {
@@ -15,9 +14,5 @@ public class InactiveGameObjectOnClickEvent : MonoBehaviour
     void Update()
     {
         
-    }
-    public void InactiveGameObject()
-    {
-        target.SetActive(false);
     }
 }

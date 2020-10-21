@@ -51,10 +51,11 @@ namespace Assets.Scripts
             //the local keep the UserData for further uses. the menu scene access the local to 
             //change it state. -> call it UserDataMart
             //Utils.Instance.Init(monoBehaviour);
-            AssetsDataMart.Instance.LoadAssets();
+            //AssetsDataMart.Instance.LoadAssets();
             HttpClient.Instance.Init();
-            HttpClient.Instance.BaseUrl = AssetsDataMart.Instance.assetsData.base_url;
-            HttpClient.Instance.BaseApiUrl = AssetsDataMart.Instance.assetsData.base_api_url;
+            HttpClient.Instance.BaseUrl = AssetsDataMart.Instance.constantsSO.base_url;
+            HttpClient.Instance.BaseApiUrl = AssetsDataMart.Instance.constantsSO.base_api_url;
+
             UserDataMart.Instance.Init();
             LoginLogic.Instance.Init();
             QuestionDataMart.Instance.Init();

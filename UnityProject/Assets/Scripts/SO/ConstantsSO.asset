@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e44c1f75174c7c3448a76ef4a364ce08, type: 3}
+  m_Name: ConstantsSO
+  m_EditorClassIdentifier: 
+  base_url: localhost:8000
+  base_api_url: localhost:8000/api/onluck
+  stringsSO: {fileID: 11400000, guid: 1e0a4765348f64f41a4da8797e565dd4, type: 2}
+  rank1IconSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
+  rank2IconSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
+  rank3IconSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
+  defaultProfilePictureSprite: {fileID: 21300000, guid: 9d1a5d5d0c1436748981de7e7f171f74,
+    type: 3}
+  soundIconSprite: {fileID: 21300000, guid: a2aaf6b5faa8d6c40a43dd2ea5ac8438, type: 3}
+  soundOffIconSprite: {fileID: 21300000, guid: 6300a28482a2f184aafec1c59b8527c7, type: 3}
+  correctAnswerSprite: {fileID: 21300000, guid: d6f37019a342dca42928fba347e9f03e,
+    type: 3}
+  wrongAnswerSprite: {fileID: 21300000, guid: 5f49dd52fa79c80479147c684c5e725a, type: 3}
+  congrateCupSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
+  buttonClickAudioClip: {fileID: 8300000, guid: be6fc636c650cdf41ba5db446ed06d42,
+    type: 3}
+  panelOpenAudioClip: {fileID: 8300000, guid: ce09caa7567e3194c870119b7cf70f75, type: 3}
+  correctAudioClip: {fileID: 8300000, guid: 6ecb7ad8e4abc30419ca0722af33cd52, type: 3}
+  wrongAudioClip: {fileID: 8300000, guid: df0ae6f664a01a8409c259f28b1a6311, type: 3}
+  gameStartAudioClip: {fileID: 8300000, guid: 1691b907733cd63429ec90d971d75ba0, type: 3}

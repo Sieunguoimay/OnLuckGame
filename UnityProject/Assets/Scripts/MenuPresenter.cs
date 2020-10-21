@@ -354,25 +354,32 @@ namespace Assets.Scripts
             QuestionDataMart.Pack pack = QuestionDataMart.Instance.packs[packIndex];
             PlayingDataMart.Pack playingPack = PlayingDataMart.Instance.playingPacks[packIndex];
 
-            string startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack + " " + pack.title+ "\n"+
-                AssetsDataMart.Instance.assetsData.strings.startup_text_question_no + " " + (playingPack.currentIndex + 1);
-            string buttonText = AssetsDataMart.Instance.assetsData.strings.resume;
+            string startupText = AssetsDataMart.Instance.constantsSO.stringsSO.startup_text_question_pack + " " + pack.title+ "\n"+
+                AssetsDataMart.Instance.constantsSO.stringsSO.startup_text_question_no + " " + (playingPack.currentIndex + 1);
+            string buttonText = AssetsDataMart.Instance.constantsSO.stringsSO.resume;
             if (playingPack.currentIndex == 0)
             {
-                startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack+" " + pack.title;
-                buttonText = AssetsDataMart.Instance.assetsData.strings.start;
+                startupText = AssetsDataMart.Instance.constantsSO.stringsSO.startup_text_question_pack+" " + pack.title;
+                buttonText = AssetsDataMart.Instance.constantsSO.stringsSO.start;
             }else if (playingPack.currentIndex == playingPack.playingQuestions.Count)
             {
-                startupText = AssetsDataMart.Instance.assetsData.strings.startup_text_question_pack+" " + pack.title
-                    +"\n"+ AssetsDataMart.Instance.assetsData.strings.startup_text_complete;
-                buttonText = AssetsDataMart.Instance.assetsData.strings.open;
+                startupText = AssetsDataMart.Instance.constantsSO.stringsSO.startup_text_question_pack+" " + pack.title
+                    +"\n"+ AssetsDataMart.Instance.constantsSO.stringsSO.startup_text_complete;
+                buttonText = AssetsDataMart.Instance.constantsSO.stringsSO.open;
             }
             rMenu.OpenStartupPanel(startupText, buttonText, (status) =>
             {
                 if (status)
                 {
-                    GameScene.MainGamePresenter.Instance.StartGame(pack, playingPack,packIndex);
-                    Debug.Log("Open Question Pack " + packIndex);
+                    if (playingPack.playingQuestions.Count > 0)
+                    {
+                        GameScene.MainGamePresenter.Instance.StartGame(pack, playingPack, packIndex);
+                        Debug.Log("Open Question Pack " + packIndex);
+                    }
+                    else
+                    {
+                        Debug.Log("No Question in this pack");
+                    }
                 }
             });
         }

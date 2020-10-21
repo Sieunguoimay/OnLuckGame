@@ -1254,18 +1254,27 @@ class OnluckController extends Controller
                 $playingData = PlayingData::select(['id','user_id','total_score','uptodate_token'])->where('user_id',$request->user_id)->first();
                 if($playingData!=null){
                     $playingData->current_question_indices = CurrentQuestionIndex::where('playing_data_id',$playingData->id)->whereIn('pack_id',$packs)->pluck('index');
-                    $playingData->playing_questions = 
+                    // $playingData->playing_questions = 
+                    //     QuestionPlayingData::select(
+                    //         ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score']
+                    //         )->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])->get();
+
+                    $playingPacks =         
                         QuestionPlayingData::select(
-                            ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score'])
-                            ->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])->get();
-                    $playingData->playing_packs =         
-                        QuestionPlayingData::select(
-                            ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score'])
-                            ->groupBy('pack_id')
-                            ->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])
-                            ->orderBy('id')
-                            ->get();
-            }else{
+                            ['id','playing_data_id','season_id','pack_id','question_id','status','started','ended','used_hint_count','score']
+                            )->where([['playing_data_id','=',$playingData->id],['season_id','=',$season_id]])
+                            ->get()
+                            ->groupBy('pack_id');//->values();
+                    $playing_packs = array();
+                    foreach($playingPacks as $key=>$value){
+                        $pack = new \stdClass();
+                        $pack->id = $key;
+                        $pack->playing_questions = $value;
+                        array_push($playing_packs,$pack);
+                    }
+                    $playingData->playing_packs = $playing_packs;
+
+                }else{
                     $playingData = new PlayingData();
                     $playingData->user_id = $request->user_id;
                     $playingData->total_score = 0;

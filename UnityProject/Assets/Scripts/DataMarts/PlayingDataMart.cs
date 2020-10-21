@@ -9,7 +9,6 @@ namespace Assets.Scripts.DataMarts
     public class PlayingDataMart
     {
 
-
         /*This class is a Singleton*/
         private static PlayingDataMart s_instance = null;
         public static PlayingDataMart Instance
@@ -25,11 +24,6 @@ namespace Assets.Scripts.DataMarts
         /*End of Singleton Declaration*/
 
 
-        //Raw Playing data from server
-        //it points to the user_playing_slots table by id with many-to-one relationships
-        //it also points to the questions table by id with many-to-one relationships
-        //it is the link between the user playing slot and the question of a given user
-
         [Serializable]
         public class ActiveTime
         {
@@ -37,6 +31,7 @@ namespace Assets.Scripts.DataMarts
             public string ended;
             public int answered_question_count;
         }
+
         [Serializable]
         public class PlayingData
         {
@@ -47,12 +42,8 @@ namespace Assets.Scripts.DataMarts
 
             public List<int> current_question_indices;//pack index
 
-
-            //public List<List<Pack>> playing_packs;//get from active_questions table
-            public List<QuestionPlayingData> playing_questions;//get from active_questions table
-            public List<ActiveTime> active_times;
+            public List<PlayingPack> playing_packs;
         }
-
 
 
 
@@ -74,13 +65,19 @@ namespace Assets.Scripts.DataMarts
             public bool dirtyFlag = false;//used in game
         }
 
+        [Serializable]
+        public class PlayingPack
+        {
+            public int id;
+            public List<QuestionPlayingData> playing_questions;
+        }
 
         public class Pack
         {
             public int currentIndex;
             public int id;
             public List<QuestionPlayingData> playingQuestions;
-            public Dictionary<int, int> questionDictionary = new Dictionary<int, int>();
+            public Dictionary<int, int> questionDictionary;
         }
 
         public PlayingData playingData = null;
@@ -117,7 +114,7 @@ namespace Assets.Scripts.DataMarts
                     {
                         playingData = response.data;
                         input.Signal();
-                        LocalProvider.Instance.SavePlayingData(playingData);
+                        //LocalProvider.Instance.SavePlayingData(playingData);
                     }
                     else
                     {
@@ -133,9 +130,13 @@ namespace Assets.Scripts.DataMarts
             playingPacks.Clear();
             QuestionDataMart.Instance.packs.ForEach((p) =>
             {
-                Pack pack = new Pack() { id = p.id };
-                pack.playingQuestions = new List<QuestionPlayingData>();
-                pack.questionDictionary.Clear();
+                Pack pack = new Pack() { 
+                    id = p.id ,
+                    currentIndex = 0, 
+                    playingQuestions = new List<QuestionPlayingData>(),
+                    questionDictionary = new Dictionary<int, int>() 
+                };
+
                 p.questions.ForEach((question) => {
                     pack.playingQuestions.Add(new QuestionPlayingData() { question_id = question.id, pack_id = pack.id ,playing_data_id = playingData.id});
                     pack.questionDictionary.Add(question.id, pack.playingQuestions.Count - 1);
@@ -160,52 +161,47 @@ namespace Assets.Scripts.DataMarts
 
             //});
             //Debug.Log("playingData.playing_questions.Count: " + playingData.playing_questions.Count);
-            playingData.playing_questions.ForEach((questionPlayingData) =>
+            foreach(var p in playingData.playing_packs)
             {
-                int value;
-                if (packDictionary.TryGetValue(questionPlayingData.pack_id, out value))
+                if (packDictionary.TryGetValue(p.id, out int value))
                 {
                     Pack pack = playingPacks[value];
-                    if (pack.questionDictionary.TryGetValue(questionPlayingData.question_id, out value))
+
+                    foreach (var questionPlayingData in p.playing_questions)
                     {
-                        // Key was in dictionary; "value" contains corresponding value
-                        //Debug.Log("pack.playingQuestions[value] = questionPlayingData: " + questionPlayingData.pack_id + " " + questionPlayingData.question_id);
-                        pack.playingQuestions[value] = questionPlayingData;
+                        if (pack.questionDictionary.TryGetValue(questionPlayingData.question_id, out value))
+                        {
+                            // Key was in dictionary; "value" contains corresponding value
+                            //Debug.Log("pack.playingQuestions[value] = questionPlayingData: " + questionPlayingData.pack_id + " " + questionPlayingData.question_id);
+                            pack.playingQuestions[value] = questionPlayingData;
+                        }
+                        else
+                        {
+                            Debug.Log("Question with id " + questionPlayingData.question_id + " not existed in pack" + pack.id);
+                            // Key wasn't in dictionary; "value" is now 0
+                        }
                     }
-                    else
-                    {
-                        Debug.Log("Question with id " + questionPlayingData.question_id + " not existed in pack" + pack.id);
-                        // Key wasn't in dictionary; "value" is now 0
-                    }
+
+                    pack.currentIndex = p.playing_questions.Count;
                 }
                 else
                 {
-                    Debug.Log("Pack with id " + questionPlayingData.pack_id + " not existed");
+                    Debug.Log("Pack with id " + p.id + " not existed");
                 }
-            });
+            }
 
             //for the first time
             for (int i = 0; i < playingPacks.Count; i++)
             {
                 Pack pack = playingPacks[i];
-                if (i< playingData.current_question_indices.Count)
-                    pack.currentIndex = playingData.current_question_indices[i];
-                else
+                if (pack.playingQuestions.Count>0 && 
+                    pack.currentIndex< pack.playingQuestions.Count &&
+                    pack.playingQuestions[pack.currentIndex].status == 'l')
                 {
-                    Debug.Log("playingData.current_question_indices.Add " + playingData.current_question_indices.Count +" "+ playingPacks.Count);
-
-                    playingData.current_question_indices.Add(0);
-                    pack.currentIndex = 0;
+                    pack.playingQuestions[pack.currentIndex].status = 'u';
                 }
-
-                int currentQuestionIndex = pack.currentIndex;
-
-                if (pack.playingQuestions.Count > 0)
-                    if(currentQuestionIndex < pack.playingQuestions.Count)
-                        if (pack.playingQuestions[currentQuestionIndex].status == 'l')
-                            pack.playingQuestions[currentQuestionIndex].status = 'u';
-
             }
+
             Debug.Log("Parsed playing data");
         }
 
@@ -228,5 +224,53 @@ namespace Assets.Scripts.DataMarts
             playingData.total_score += score;
             if (m_scoreChangedCallback != null) m_scoreChangedCallback(true);
         }
+        public void AddNewPlayingQuestion(QuestionPlayingData playingQuestion)
+        {
+            foreach (var p in playingData.playing_packs)
+            {
+                if(p.id == playingQuestion.pack_id)
+                {
+                    bool newPlayingQuestion = true;
+                    for (int i = 0; i < p.playing_questions.Count; i++)
+                    {
+                        if (p.playing_questions[i].question_id == playingQuestion.question_id)
+                        {
+                            p.playing_questions[i] = playingQuestion;
+                            newPlayingQuestion = false;
+                            break;
+                        }
+                    }
+                    if (newPlayingQuestion)
+                        p.playing_questions.Add(playingQuestion);
+                }
+            }
+            //        for (int i = 0; i < PlayingDataMart.Instance.playingData.playing_questions.Count; i++)
+            //    if (PlayingDataMart.Instance.playingData.playing_questions[i].question_id == playingQuestion.question_id)
+            //    {
+            //        PlayingDataMart.Instance.playingData.playing_questions[i] = playingQuestion;
+            //        newPlayingQuestion = false;
+            //        break;
+            //    }
+            //if (newPlayingQuestion)
+            //    PlayingDataMart.Instance.playingData.playing_questions.Add(playingQuestion);
+
+        }
     }
 }
+
+//if (i< playingData.current_question_indices.Count)
+//    pack.currentIndex = playingData.current_question_indices[i];
+//else
+//{
+//    Debug.Log("playingData.current_question_indices.Add " + playingData.current_question_indices.Count +" "+ playingPacks.Count);
+
+//    playingData.current_question_indices.Add(0);
+//    pack.currentIndex = 0;
+//}
+
+//int currentQuestionIndex = pack.currentIndex;
+
+//if (pack.playingQuestions.Count > 0)
+//    if(currentQuestionIndex < pack.playingQuestions.Count)
+//        if (pack.playingQuestions[currentQuestionIndex].status == 'l')
+//            pack.playingQuestions[currentQuestionIndex].status = 'u';

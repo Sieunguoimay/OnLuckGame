@@ -68,6 +68,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Streams\OutputWindow.cs" />
     <Compile Include="Assets\Scripts\GameScene\QuestionItem.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
+    <Compile Include="Assets\Scripts\SO\StringsSO.cs" />
     <Compile Include="Assets\Scripts\FBLogin.cs" />
     <Compile Include="Assets\Scripts\GameScene\CountdownTimer.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarArchive.cs" />
@@ -84,6 +85,7 @@
     <Compile Include="Assets\Scripts\DataMarts\PlayingDataMart.cs" />
     <Compile Include="Assets\Scripts\ScoreboardItem.cs" />
     <Compile Include="Assets\Scripts\ProgressBar.cs" />
+    <Compile Include="Assets\Scripts\Utils\MonoBehaviourSingleton.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipStrings.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipNameTransform.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserWindows.cs" />
@@ -97,6 +99,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Inflater.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\BZip2\BZip2InputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\PathFilter.cs" />
+    <Compile Include="Assets\Scripts\SO\ConstantsSO.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipEntry.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\Exceptions\SharpZipBaseException.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\BZip2\BZip2Constants.cs" />
@@ -114,6 +117,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\GZip\GzipOutputStream.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowser.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterPending.cs" />
+    <Compile Include="Assets\Scripts\UI\PopupController.cs" />
     <Compile Include="Assets\Scripts\ButtonSound.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\PendingBuffer.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
@@ -157,26 +161,45 @@
     <Compile Include="Assets\Scripts\ScrollList.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipInputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarExtendedHeaderReader.cs" />
-    <Compile Include="Assets\Scripts\MenuScene\InactiveGameObjectOnClickEvent.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Checksum\Crc32.cs" />
     <Compile Include="Assets\Scripts\Menu.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\BZip2\BZip2.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Lzw\LzwInputStream.cs" />
+    <Compile Include="Assets\Scripts\UI\ThreeButtonPanel.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\WindowsNameTransform.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipEncryptionMethod.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\InvalidNameException.cs" />
   </ItemGroup>
   <ItemGroup>
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro.cginc" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Mobile Overlay.shader" />
      <None Include="Assets\FacebookSDK\link.xml" />
      <None Include="Assets\FacebookSDK\Plugins\iOS\Facebook.Unity.IOS.dll" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_Bitmap.shader" />
      <None Include="Assets\FacebookSDK\Plugins\Settings\Facebook.Unity.Settings.dll" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface-Mobile.shader" />
      <None Include="Assets\FacebookSDK\Plugins\Canvas\Facebook.Unity.Canvas.dll" />
      <None Include="Assets\StandaloneFileBrowser\Plugins\Ookii.Dialogs.dll" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Surface.shader" />
      <None Include="Assets\FacebookSDK\Plugins\Facebook.Unity.dll" />
+     <None Include="Assets\TextMesh Pro\Sprites\EmojiOne Attribution.txt" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_Bitmap-Custom-Atlas.shader" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF.shader" />
+     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Properties.cginc" />
      <None Include="Assets\FacebookSDK\Plugins\Gameroom\Facebook.Unity.Gameroom.dll" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Surface.cginc" />
+     <None Include="Assets\Materials\Gradient.shader" />
+     <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
      <None Include="Assets\FacebookSDK\Plugins\Android\Facebook.Unity.Android.dll" />
      <None Include="Assets\iOS Project Builder\Setup Howto.txt" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Mobile Masking.shader" />
      <None Include="Assets\StandaloneFileBrowser\Plugins\System.Windows.Forms.dll" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF Overlay.shader" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_Bitmap-Mobile.shader" />
+     <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_SDF-Mobile.shader" />
+     <None Include="Assets\TextMesh Pro\Resources\Shaders\TMP_Sprite.shader" />
      <None Include="Assets\FacebookSDK\Plugins\Gameroom\FacebookNamedPipeClient.dll" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Programs\Unity\2020.1.0f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>

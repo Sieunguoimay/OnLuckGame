@@ -64,7 +64,9 @@ namespace Assets.Scripts
                     playingQuestion.status = status;
                     playingQuestion.score = Instance.hintManager.remainingScore;
                     playingQuestion.dirtyFlag = true;
+
                     dirtyFlag = true;
+
                     Debug.Log("playingQuestion.ended " + playingQuestion.ended);
 
                     if(status == 'c'|| !isTypingQuestion)
@@ -106,40 +108,28 @@ namespace Assets.Scripts
             //playingPacks[pack].currentIndex = currentIndex;
             PlayingDataMart.Pack pack = PlayingDataMart.Instance.playingPacks[packIndex];
             pack.currentIndex = questionIndex;
-            int currentScore = PlayingDataMart.Instance.playingData.total_score;
 
-            PlayingData playingData = new PlayingData
-            {
-                playing_data_id = PlayingDataMart.Instance.playingData.id,
-                total_score = currentScore,
-                pack_id = pack.id,
-                index = pack.currentIndex,
-                modified_questions = new List<PlayingDataMart.QuestionPlayingData>(),
-            };
-            PlayingDataMart.Instance.playingData.total_score = currentScore;
-            PlayingDataMart.Instance.playingData.current_question_indices[packIndex] = questionIndex;
+            //PlayingData playingData = new PlayingData
+            //{
+            //    playing_data_id = PlayingDataMart.Instance.playingData.id,
+            //    total_score = currentScore,
+            //    pack_id = pack.id,
+            //    index = pack.currentIndex,
+            //    modified_questions = new List<PlayingDataMart.QuestionPlayingData>(),
+            //};
+            //PlayingDataMart.Instance.playingData.total_score = PlayingDataMart.Instance.playingData.total_score;
+            //PlayingDataMart.Instance.playingData.current_question_indices[packIndex] = questionIndex;
             pack.playingQuestions.ForEach((playingQuestion) =>
             {
-                if (playingQuestion.dirtyFlag)
+                if (playingQuestion.dirtyFlag&&playingQuestion.status=='a')
                 {
                     //send this one to server pls
                     //playingData.modified_questions.Add(playingQuestion);
-
-                    bool newPlayingQuestion = true;
-                    for(int i = 0; i< PlayingDataMart.Instance.playingData.playing_questions.Count; i++)
-                        if(PlayingDataMart.Instance.playingData.playing_questions[i].question_id == playingQuestion.question_id)
-                        {
-                            PlayingDataMart.Instance.playingData.playing_questions[i] = playingQuestion;
-                            newPlayingQuestion = false;
-                            break;
-                        }
-                    if(newPlayingQuestion)
-                        PlayingDataMart.Instance.playingData.playing_questions.Add(playingQuestion);
-
+                    PlayingDataMart.Instance.AddNewPlayingQuestion(playingQuestion);
                 }
             });
-            Debug.Log("OnPlayingDataOutputted: Success");
-            LocalProvider.Instance.SavePlayingData(PlayingDataMart.Instance.playingData);
+            //Debug.Log("OnPlayingDataOutputted: Success");
+            //LocalProvider.Instance.SavePlayingData(PlayingDataMart.Instance.playingData);
 
             //HttpClient.Instance.SendQuestionPlayingDataToServer(playingData, (response) => {
             //    if (response.status.Equals("OK"))

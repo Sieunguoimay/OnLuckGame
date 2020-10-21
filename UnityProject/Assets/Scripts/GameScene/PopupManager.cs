@@ -42,8 +42,8 @@ public class PopupManager : MonoBehaviour
         UiHolder.SetActive(true);
         UiHolder2.SetActive(true);
         UiStatusIcon.SetActive(true);
-        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.correctAnswerSprite;
-        UiStatusText.text = AssetsDataMart.Instance.assetsData.strings.correct;// "Xin Chuc Mung!!\nBan da hoan thanh xong bo cau hoi " + questionPackName;
+        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.correctAnswerSprite;
+        UiStatusText.text = AssetsDataMart.Instance.constantsSO.stringsSO.correct;// "Xin Chuc Mung!!\nBan da hoan thanh xong bo cau hoi " + questionPackName;
         UiOKButton.SetActive(true);
         UiOKButton.GetComponentInChildren<Text>().text = buttonText;
         UiBackToHomeButton.SetActive(true);
@@ -58,7 +58,7 @@ public class PopupManager : MonoBehaviour
         UiHolder.SetActive(true);
         UiHolder2.SetActive(true);
         UiStatusIcon.SetActive(true);
-        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.wrongAnswerSprite;
+        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.wrongAnswerSprite;
         UiOKButton.SetActive(true);
         UiOKButton.GetComponentInChildren<Text>().text = buttonText;// (isMCQ ? "CAU TIEP THEO":"THU LAI");
         UiStatusText.text = statusText;// "Xin Chuc Mung!!\nBan da hoan thanh xong bo cau hoi " + questionPackName;
@@ -73,8 +73,8 @@ public class PopupManager : MonoBehaviour
         UiHolder.SetActive(true);
         UiHolder2.SetActive(true);
         UiStatusIcon.SetActive(true);
-        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.congrateCupSprite;
-        UiStatusText.text = AssetsDataMart.Instance.assetsData.strings.congrate+" " + questionPackName;
+        UiStatusIcon.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.congrateCupSprite;
+        UiStatusText.text = AssetsDataMart.Instance.constantsSO.stringsSO.congrate+" " + questionPackName;
         UiOKButton.SetActive(false);
         UiBackToHomeButton.SetActive(true);
         UiShareProgressButton.SetActive(true);

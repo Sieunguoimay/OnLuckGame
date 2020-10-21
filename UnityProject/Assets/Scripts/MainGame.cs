@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using Assets.Scripts.GameScene;
 using Assets.Scripts;
 using Assets.Scripts.DataMarts;
+
 public class MainGame : MonoBehaviour
 {
     private MainGamePresenter m_mainGamePresenter;
@@ -76,7 +77,8 @@ public class MainGame : MonoBehaviour
  
         m_mainGamePresenter = MainGamePresenter.Instance.Ready(this);
 
-        gameObject.AddComponent<AudioSource>().PlayOneShot(AssetsDataMart.Instance.panelOpenAudioClip);
+        gameObject.AddComponent<AudioSource>().PlayOneShot(AssetsDataMart.Instance.constantsSO.panelOpenAudioClip);
+
         AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
 
         Debug.Log("MainGame::Started");
@@ -90,6 +92,7 @@ public class MainGame : MonoBehaviour
             m_mainGamePresenter.Terminate();
         }
     }
+    
     void OnApplicationPause(bool status)
     {
         if (status)
@@ -97,12 +100,13 @@ public class MainGame : MonoBehaviour
             //Utils.Instance.showToast("OnApplicationPause", 2,UiToastText);
         }
     }
+    
     void OnApplicationQuit()
     {
         MenuPresenter.Instance.OnQuit();
         MainGamePresenter.Instance.OnQuit();
-        //Utils.Instance.showToast("OnApplicationQuit", 2,UiToastText);
     }
+
     /*Event list goes here..*/
 
     public void OnQuestionListPanelBackButtonClicked()
@@ -114,11 +118,11 @@ public class MainGame : MonoBehaviour
     {
         HideQuestionListPanel();
 
-
         int questionIndex = EventSystem.current.currentSelectedGameObject.GetComponent<QuestionItem>().Index;
+
         if (!m_mainGamePresenter.CheckCurrentQuestionIndex(questionIndex))
         {
-            if (m_mainGamePresenter.m_isPlayingInMCQNow)
+            if (m_mainGamePresenter.IsPlayingInMCQNow)
             {
                 AskForLeavingTimingQuestion((success) => {
                     if (success)
@@ -134,13 +138,14 @@ public class MainGame : MonoBehaviour
     }
     public void OnMainSceneBackButtonClicked()
     {
-        if (m_mainGamePresenter.m_isPlayingInMCQNow)
+        if (m_mainGamePresenter.IsPlayingInMCQNow)
         {
             AskForLeavingTimingQuestion((success) =>
             {
                 if (success)
                 {
                     Debug.Log("End game");
+
                     m_mainGamePresenter.Terminate();
                 }
                 else
@@ -152,6 +157,7 @@ public class MainGame : MonoBehaviour
         else
         {
             Debug.Log("End game");
+
             m_mainGamePresenter.Terminate();
         }
     }
@@ -160,7 +166,7 @@ public class MainGame : MonoBehaviour
         Debug.Log("OnShareProgressButtonClicked");
 
 #if UNITY_ANDROID || UNITY_IOS
-        new NativeShare().SetText(AssetsDataMart.Instance.assetsData.base_url).Share();
+        new NativeShare().SetText(AssetsDataMart.Instance.constantsSO.base_url).Share();
 #endif
     }
     public void PlayAudio(AudioClip clip)
@@ -182,9 +188,13 @@ public class MainGame : MonoBehaviour
     public void OnHintButtonClicked()
     {
         if (!UiHintPopupPanel.activeSelf)
+        {
             m_mainGamePresenter.BuyHint();
+        }
         else
+        {
             HideHintPanel();
+        }
     }
     public void OnSaveImageButtonClicked()
     {
@@ -192,29 +202,25 @@ public class MainGame : MonoBehaviour
     }
     public void OnAnswerButtonClicked()
     {
-        string answer = UiAnswerInputField.text;
-        m_mainGamePresenter.VerifyTypedAnswer(answer);
-        //Debug.Log(answer);
+        m_mainGamePresenter.VerifyTypedAnswer(UiAnswerInputField.text);
     }
     public void OnMQCAnswerItemButtonClicked()
     {
         int answer = EventSystem.current.currentSelectedGameObject.GetComponent<MCQAnswerItem>().Index;
+        
         m_mainGamePresenter.VerifyMCQAnswer(answer);
-        //Debug.Log(answer);
     }
     public void OnMQCQuestionTimeout()
     {
         Debug.Log("time's up babe");
+        
         m_mainGamePresenter.MCQTimeout();
     }
 
-    //public void OnPopupPanelClicked()
-    //{
-    //    UiPopupPanel.GetComponent<PopupManager>().Hide();
-    //}
     public void OnPopupPanelClosed(bool status)
     {
-        if (m_mainGamePresenter.IsLastQuestion() && m_mainGamePresenter.IsInMCQMode())
+        if (m_mainGamePresenter.IsLastQuestion() && 
+            m_mainGamePresenter.IsInMCQMode())
         {
             ShowCongratePopup(m_mainGamePresenter.GetCurrentQuestionPackName(),PlayingDataMart.Instance.playingData.total_score);
         }
@@ -227,10 +233,6 @@ public class MainGame : MonoBehaviour
 
         }
     }
-    //public void OnOkButtonClicked()
-    //{
-    //    m_mainGamePresenter.NextQuestionAfterAnswering();
-    //}
     public void OnBackToMenuButtonClicked()
     {
         Debug.Log("End game");
@@ -242,7 +244,6 @@ public class MainGame : MonoBehaviour
     }
     public void OnAvatarButtonClicked()
     {
-        //m_mainGamePresenter.OpenQuestion(0);
     }
 
 
@@ -251,22 +252,24 @@ public class MainGame : MonoBehaviour
 
     public void ShowQuestionListPanel()
     {
-        PlayAudio(AssetsDataMart.Instance.panelOpenAudioClip);
+        PlayAudio(AssetsDataMart.Instance.constantsSO.panelOpenAudioClip);
 
         UiQuestionListPanel.SetActive(true);
-        ScrollList list = UiQuestionListPanel.GetComponent<ScrollList>();
+
+        var list = UiQuestionListPanel.GetComponent<ScrollList>();
+
         m_mainGamePresenter.LoadQuestionListIntoUiList(list);
 
         UiQuestionListPanel.GetComponent<Animator>().SetTrigger("show");
-        //HideQuestionPanel();
     }
+
     public void HideQuestionListPanel()
     {
-        PlayAudio(AssetsDataMart.Instance.panelOpenAudioClip) ;
+        PlayAudio(AssetsDataMart.Instance.constantsSO.panelOpenAudioClip);
+
         UiQuestionListPanel.GetComponent<Animator>().SetTrigger("hide");
+
         HideObjectAfterAnimation(UiQuestionListPanel);
-        //UiQuestionListPanel.SetActive(false);
-        //ShowQuestionPanel();
     }
 
     private void HideObjectAfterAnimation(GameObject gameObject)
@@ -276,6 +279,7 @@ public class MainGame : MonoBehaviour
     private IEnumerator hideObjectAfterAnimation(GameObject gameObject)
     {
         yield return new WaitForSeconds(gameObject.GetComponent<Animator>().GetCurrentAnimatorClipInfo(0)[0].clip.length);
+
         gameObject.SetActive(false);
     }
     public void ShowQuestionPanel()
@@ -306,16 +310,17 @@ public class MainGame : MonoBehaviour
     public void SetQuestionImages(List<QuestionDataMart.Image>images)
     {
         foreach (Transform child in UiImageSlideshow.transform)
+        {
             Destroy(child.gameObject);
-
+        }
 
         images.ForEach((image) =>
         {
-            //Texture2D texture = image.sprite.texture;
-            GameObject newItem = Instantiate(UiImageItemTemplate) as GameObject;
-            newItem.GetComponent<Image>().sprite = image.sprite;// Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+            var newItem = Instantiate(UiImageItemTemplate) as GameObject;
+            newItem.GetComponent<Image>().sprite = image.sprite;
             newItem.transform.parent = UiImageSlideshow.transform;
         });
+        
         UiImageSlideshow.GetComponent<ImageSlideshow>().scrollbar.GetComponent<Scrollbar>().value = 0;
         UiImageSlideshow.GetComponent<ImageSlideshow>().scroll_pos = 0;
         UiImageSlideshow.GetComponent<ImageSlideshow>().index = 0;
@@ -340,23 +345,26 @@ public class MainGame : MonoBehaviour
     public void HideAnswerResultPopupPanel()
     {
         UiPopupPanel.GetComponent<PopupManager>().Hide();
-        //UiPopupPanel.SetActive(false);
     }
   
     private int answerResultState = 0;
+
     public void ShowCorrectAnswer(string buttonText, int score, int tobeAddedScore)
     {
         UiPopupPanel.GetComponent<PopupManager>().ShowCorrectAnswer(buttonText,score, tobeAddedScore);
+
         answerResultState = 0;
     }
     public void ShowWrongAnswer(string buttonText, string statusText, int score )
     {
         UiPopupPanel.GetComponent<PopupManager>().ShowWrongAnswer(buttonText, statusText,score);
+
         answerResultState = 1;
     }
     public void ShowCongratePopup(string questionPackName, int score)
     {
         UiPopupPanel.GetComponent<PopupManager>().ShowCongratePopup(questionPackName, score);
+
         answerResultState = 2;
     }
 
@@ -389,12 +397,18 @@ public class MainGame : MonoBehaviour
     {
         for (int i = 0; i < 4; i++)
         {
-            MCQAnswerItem item = UiMCQAnswerImage[i].GetComponent<MCQAnswerItem>();
+            var item = UiMCQAnswerImage[i].GetComponent<MCQAnswerItem>();
+
             item.DisableButton();
+
             if(i == correctAnswer)
+            {
                 item.SetCorrectColor();
+            }
             else if (i == answer)
+            {
                 item.SetWrongColor();
+            }
         }
     }
     public void SetHintUiInteractable(bool state)
@@ -412,20 +426,28 @@ public class MainGame : MonoBehaviour
     }
     public void SetUiNextButtonInteractable(bool status)
     {
-        //UiNextButton.interactable = status;
         Debug.Log("SetUiNextButtonInteractable " + status);
+
         if (status)
+        {
             UiNextButton.GetComponent<Animator>().SetTrigger("show");
+        }
         else
+        {
             UiNextButton.GetComponent<Animator>().SetTrigger("hide");
+        }
     }
+
     public void SetUiPrevButtonInteractable(bool status)
     {
-        //UiNextButton.interactable = status;
         if (status)
+        {
             UiPrevButton.GetComponent<Animator>().SetTrigger("show");
+        }
         else
+        {
             UiPrevButton.GetComponent<Animator>().SetTrigger("hide");
+        }
     }
     public void SetMCQChoices(string[] choices)
     {
@@ -457,16 +479,18 @@ public class MainGame : MonoBehaviour
     {
         UiScoreText.text = score.ToString();
     }
+
     public void SetAvatar(Texture2D texture)
     {
         UiAvatarImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
     }
+
     public void SetUserName(string name)
     {
         UiUserNameText.text = name;
     }
-    public delegate void AskForLeavingTimingQuestionCallback(bool success);
-    public void AskForLeavingTimingQuestion(AskForLeavingTimingQuestionCallback callback)
+
+    public void AskForLeavingTimingQuestion(Action<bool> callback)
     {
         PopupManager popupManager = UiPopupPanel.GetComponent<PopupManager>();
         popupManager.m_askingOnLeaving = true;
@@ -476,8 +500,11 @@ public class MainGame : MonoBehaviour
     public void ShowSaveFeedback()
     {
         UiSaveFeedbackText.SetActive(true);
+
         StartCoroutine(saveFeedback(3.0f, () => {
+        
             UiSaveFeedbackText.SetActive(false);
+
         }));
 
         //Animator animator = UiSaveFeedbackPanel.GetComponent<Animator>();
@@ -491,11 +518,10 @@ public class MainGame : MonoBehaviour
         //    }
         //}
     }
-    public delegate void showSaveFeedbackCallback();
-    public IEnumerator saveFeedback(float time,showSaveFeedbackCallback callback)
+    public IEnumerator saveFeedback(float time,Action callback)
     {
         yield return new WaitForSeconds(time);
-        if(callback!=null)
-            callback();
+
+        callback?.Invoke();
     }
 }
