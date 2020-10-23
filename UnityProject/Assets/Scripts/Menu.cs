@@ -6,6 +6,7 @@ using UnityEngine.EventSystems;
 using Assets.Scripts;
 using Assets.Scripts.DataMarts;
 using Assets.Scripts.GameScene;
+using System;
 
 public class Menu : MonoBehaviour
 {
@@ -61,7 +62,6 @@ public class Menu : MonoBehaviour
     public Text UiGuidelineContentText;
 
     public GameObject UiScoreboardPanel;
-    public GameObject UiScoreboardScrollList;
 
     private MenuPresenter m_menuPresenter;
 
@@ -83,15 +83,17 @@ public class Menu : MonoBehaviour
     public Text UiLogText;
 
     private bool pressOneMoreTimeToExit;
+
+
+    [SerializeField] private PopupController PopupController;
+
     void Awake()
     {
 
-        Application.runInBackground = true;
-
-        Debug.Log("Menu Awake");
         Utils.Instance.Init(this);
-        Main.Instance.Init(this);
+
         UiSpinner.SetActive(false);
+
         UiLogText.gameObject.SetActive(false);
 
         //signal this on returning from MainGameScene
@@ -102,7 +104,6 @@ public class Menu : MonoBehaviour
     void Start()
     {
         Debug.Log("Menu Start");
-        Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         /*Default State*/
         //ToggleUiAccordingToLoginState(false);
@@ -120,7 +121,6 @@ public class Menu : MonoBehaviour
         UiProfileMenuGuessText.SetActive(false);
 
         UiRenameInputField.GetComponent<EnterKeyEvent>().eventCallback = () => OnRenameInputFieldEndEdit(UiRenameInputField.GetComponentInChildren<Text>().text);
-        //UiProgressBar.value = 0;
         hideSplashSceneLock = true;
         progressBarLock = false;
         pressOneMoreTimeToExit = false;
@@ -128,16 +128,12 @@ public class Menu : MonoBehaviour
         m_menuPresenter = MenuPresenter.Instance.Init(this);
 
         gameObject.AddComponent<AudioSource>();
-        AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
-        Debug.Log("Menu Started");
 
-    }
-    void OnApplicationPause(bool status)
-    {
-        if (status)
-        {
-            //Utils.Instance.showToast("Menu::OnApplicationPause", 2, UiToastText);
-        }
+        AssetsDataMart.Instance.rAudioSource = GetComponent<AudioSource>();
+
+        m_menuPresenter.ScoreboardItemLoaded += PopupController.AddScoreboardItem;
+
+        Debug.Log("Menu Started");
     }
 
     void Update()
@@ -150,6 +146,7 @@ public class Menu : MonoBehaviour
                 Toast.Instance.Show(Canvas, AssetsDataMart.Instance.constantsSO.stringsSO.press_one_more_time, 3, () =>
                 {
                     pressOneMoreTimeToExit = false;
+
                 });
             }
             else
@@ -203,28 +200,36 @@ public class Menu : MonoBehaviour
         Debug.Log("OnRatingButtonClicked");
         Application.OpenURL(HttpClient.Instance.BaseUrl);
     }
+
+
+
     public void OnGuidelineButtonClicked()
     {
-        Debug.Log("OnGuidelineButtonClicked");
-        ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.guideline, QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
+        //Debug.Log("OnGuidelineButtonClicked");
+        //ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.guideline, QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
         //ShowPopupPanel(5);
+        PopupController.ShowGuideline(QuestionDataMart.Instance.onluckLocalMetadata.guideline_content);
     }
     public void OnScoreboardButtonClicked()
     {
-        Debug.Log("OnScoreboardButtonClicked");
-        ShowPopupPanel(6);
+        //ShowPopupPanel(6);
+        PopupController.ShowScoreboard();
+
         if (m_menuPresenter.ShowScoreboard())
         {
             spinnerIndex = 6;
-            SetSpinnerTo(getPanelById(6));
+            SetSpinnerTo(PopupController.gameObject);
         }
     }
     public void OnIntroButtonClicked()
     {
         Debug.Log("OnIntroButtonClicked");
         //ShowPopupPanel(7);
-        ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.intro, QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
+        //ShowGuidelinePanel(AssetsDataMart.Instance.constantsSO.stringsSO.intro, QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
+        PopupController.ShowGuideline(QuestionDataMart.Instance.onluckLocalMetadata.intro_content);
     }
+
+
 
     public void OnClosePupupButtonClicked()
     {
@@ -360,10 +365,13 @@ public class Menu : MonoBehaviour
     private IEnumerator hidePopupPanel()
     {
         Animator animator = UiPopupPanel.GetComponent<Animator>();
+
         if (animator != null)
         {
             animator.SetTrigger("hide");
+
             float animDuration = animator.GetCurrentAnimatorClipInfo(0)[0].clip.length;
+
             yield return new WaitForSeconds(animDuration);
         }
         togglePopupPanel(false, m_currentPanelId);
@@ -404,11 +412,13 @@ public class Menu : MonoBehaviour
         }
         return null;
     }
+
     public void ShowAutoHideSplashScene()
     {
         UiSplashScenePanel.SetActive(true);
         StartCoroutine(hideSplashSceneOnAnimationEnd());
     }
+
     private IEnumerator hideSplashSceneOnAnimationEnd()
     {
         Debug.Log("Animating Splash Scene Logo");
@@ -418,6 +428,7 @@ public class Menu : MonoBehaviour
         else
             StartCoroutine(hideSplashScenePanel());
     }
+
     private IEnumerator hideSplashScenePanel()
     {
         Animator splashAnimator = UiSplashScenePanel.GetComponent<Animator>();
@@ -432,11 +443,13 @@ public class Menu : MonoBehaviour
         Debug.Log("Splash scene is gone");
 
     }
+
     public void ShowSplashScene()
     {
         UiSplashScenePanel.SetActive(true);
         SetSpinnerTo(UiSplashSceneSpinnerTargetPanel);
     }
+
     public void HideSplashScene()
     {
         StartCoroutine(hideSplashScenePanel());
@@ -446,40 +459,49 @@ public class Menu : MonoBehaviour
     {
         UiUserNameText.text = name;
     }
+
     public void SetAvatar(Sprite avatar)
     {
         UiAvatarImage.sprite = avatar;
     }
+
     public void SetAvatar(Texture2D avatar)
     {
         UiAvatarImage.sprite = Sprite.Create(avatar,new Rect(0, 0, avatar.width, avatar.height),new Vector2(0, 0));
     }
+
     public void SetAvatar(string url)
     {
         Utils.Instance.LoadImageIntoImage(url,UiAvatarImage);
     }
+
     public void SetScore(int score)
     {
         UiScoreText.text = score.ToString();
     }
+
     public void SetLoginStatusText(string status)
     {
         UiLoginStatusText.text = status;
     }
+
     public void SetSeasonText(string season)
     {
         UiSeasonText.text = season;
     }
+
     public void SetSignupStatusText(string status)
     {
         UiSignupStatusText.text = status;
     }
+
     public void ShowVerificationPanel()
     {
         getPanelById(m_currentPanelId).SetActive(false);
         UiVerificationPanel.SetActive(true);
         m_currentPanelId = 8;
     }
+
     public void OnAvatarButtonClicked()
     {
 
@@ -498,12 +520,14 @@ public class Menu : MonoBehaviour
             UiRenameInputField.SetActive(false);
         });
     }
+
     public void OnCancelRenameButtonClicked()
     {
         UiRenameInputField.SetActive(false);
         UiRenameInputField.GetComponent<InputField>().Select();
         UiRenameInputField.GetComponent<InputField>().text = "";
     }
+
     public void ToggleSoundButtonUi(bool state)
     {
         if (state)
@@ -518,13 +542,15 @@ public class Menu : MonoBehaviour
         }
     }
 
-    public delegate void SetScoreboardCallback(ScoreboardItem item, int index);
-    public void SetScoreboard(int size, SetScoreboardCallback callback)
-    {
-        UiScoreboardScrollList
-            .GetComponent<ScrollList>()
-            .CreateList<ScoreboardItem>(size, (item, index)=>callback(item,index));
-    }
+    //public delegate void SetScoreboardCallback(ScoreboardItem item, int index);
+    //public void SetScoreboard(int size, Action<ScoreboardItem,int> callback)
+    //{
+    //    UiScoreboardScrollList
+    //        .GetComponent<ScrollList>()
+    //        .CreateList<ScoreboardItem>(size, (item, index)=>callback(item,index));
+    //}
+
+
     public delegate void SetQuestionPacksCallback(QuestionPackItem item, int index);
     public void SetQuestionPacks(int size, SetQuestionPacksCallback callback)
     {
@@ -652,43 +678,55 @@ public class Menu : MonoBehaviour
     }
 
 
-    public delegate void AskForPermissionCallback();
-    public AskForPermissionCallback askForPermissionCallback = null;
-    public AskForPermissionCallback checkYourNetworkCallback = null;
+    public Action askForPermissionCallback = null;
+
+    public Action checkYourNetworkCallback = delegate { };
+
     private int permissinPopupMode = -1;
-    public void SetUpAskForPermissionPopup(AskForPermissionCallback callback)
+
+    public void SetUpAskForPermissionPopup(Action callback)
     {
         askForPermissionCallback = callback;
+
         UiAskForPermissionButton.onClick.AddListener(() =>
         {
-            if (permissinPopupMode == 0) 
-                askForPermissionCallback();
+            if (permissinPopupMode == 0)
+            {
+                askForPermissionCallback?.Invoke();
+            }
             else if (permissinPopupMode == 1)
-                checkYourNetworkCallback();
+            {
+                checkYourNetworkCallback?.Invoke();
+            }
+
             UiAskForPermissionPopupPanel.Hide();
         });
     }
-    public void SetUpCheckYourNetwork(AskForPermissionCallback callback)
-    {
-        checkYourNetworkCallback = callback;
-    }
+
     public void ShowPopupToAskForPermission()
     {
         permissinPopupMode = 0;
+
         UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.constantsSO.stringsSO.download;
+        
         //"TAI XUONG";
         UiAskForPermissionText.text = AssetsDataMart.Instance.constantsSO.stringsSO.new_game_data_available;
+        
         //"Da co du lieu moi cho game. Vui long tai xuong!";
-        UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
+        UiAskForPermissionPopupPanel.Show();
     }
+
     public void ShowPopupCheckYourNetwork()
     {
         permissinPopupMode = 1;
+        
         UiAskForPermissionButton.GetComponentInChildren<Text>().text = AssetsDataMart.Instance.constantsSO.stringsSO.try_again;
+        
         //"THU LAI";
         UiAskForPermissionText.text = AssetsDataMart.Instance.constantsSO.stringsSO.no_internet;
+        
         //"Khong co internet!";
-        UiAskForPermissionPopupPanel.Show();// m_holder.SetActive(true);
+        UiAskForPermissionPopupPanel.Show();
     }
 
     public void SetProgressBar(float value)

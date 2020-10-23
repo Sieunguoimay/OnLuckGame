@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using Assets.Scripts.DataMarts;
 using Assets.Scripts;
-public class HttpClient 
+
+public class HttpClient :MonoBehaviourSingleton<HttpClient>
 {
     [System.Serializable]
     public class LogInResponseData
@@ -24,18 +25,7 @@ public class HttpClient
         public string profile_picture;
     }
 
-    //[System.Serializable]
-    //public class SignInResponseData
-    //{
-    //    public int user_id;
-    //    //public string active_vendor;
-    //    //public string profile_picture;
-    //}
-    //[System.Serializable]
-    //public class UploadPhotoResponseData
-    //{
-    //    public string profile_picture;
-    //}
+
     [System.Serializable]
     public class UserScoreResponseData
     {
@@ -64,22 +54,11 @@ public class HttpClient
     public string BaseApiUrl = "http://onluck-the-game.herokuapp.com/api/onluck";
 #endif
 
-    private HttpClient()
+    private void Awake()
     {
-
+        
     }
 
-    public static HttpClient Instance
-    {
-        get
-        {
-            if(s_instance == null)
-            {
-                s_instance = new HttpClient();
-            }
-            return s_instance;
-        }
-    }
     public void Init()
     {
         Debug.Log("Initialized Http Client");

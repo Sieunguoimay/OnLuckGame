@@ -75,6 +75,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\InflaterDynHeader.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipOutputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipExtraData.cs" />
+    <Compile Include="Assets\Scripts\Utils\QueuedCorroutine.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Checksum\Adler32.cs" />
     <Compile Include="Assets\Scripts\MenuScene\Toast.cs" />
     <Compile Include="Assets\Scripts\GameScene\MainGamePresenter.cs" />
@@ -169,6 +170,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\WindowsNameTransform.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipEncryptionMethod.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\InvalidNameException.cs" />
+    <Compile Include="Assets\Scripts\UI\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro.cginc" />

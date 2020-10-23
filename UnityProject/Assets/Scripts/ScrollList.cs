@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,29 +18,36 @@ public class ScrollList : MonoBehaviour
     {
 
     }
+    public T CreateItem<T>()
+    {
+        GameObject newItem = Instantiate(ItemTemplate) as GameObject;
 
-    public delegate void ShowListCallback<T>(T item, int index);
-    public void CreateList<T>(int number,ShowListCallback<T> callback)
+        newItem.SetActive(true);
+
+        newItem.transform.SetParent(ItemTemplate.transform.parent, false);
+
+        T item = newItem.GetComponent<T>();
+
+        m_cachedItemList.Add(newItem);
+
+        return item;
+    }
+    public void CreateList<T>(int number,Action<T,int> callback)
     {
         foreach(GameObject item in m_cachedItemList)
         {
             Destroy(item);
         }
+
         m_cachedItemList.Clear();
 
         for (int i = 0; i < number; i++)
         {
-            GameObject newItem = Instantiate(ItemTemplate) as GameObject;
-            newItem.SetActive(true);
-            newItem.transform.SetParent(ItemTemplate.transform.parent, false);
-
-            T item = newItem.GetComponent<T>();
-            callback(item,i);
-
-            m_cachedItemList.Add(newItem);
+            callback(CreateItem<T>(), i);
         }
     }
-    public void CreateList(int number, ShowListCallback<GameObject> callback)
+
+    public void CreateList(int number, Action<GameObject, int> callback)
     {
         foreach (GameObject item in m_cachedItemList)
         {
