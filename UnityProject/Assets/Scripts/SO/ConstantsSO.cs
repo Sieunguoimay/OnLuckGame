@@ -23,13 +23,8 @@ public class ConstantsSO : ScriptableObject
     public Sprite wrongAnswerSprite;
     public Sprite congrateCupSprite;
 
-
-    public AudioClip buttonClickAudioClip;
-    public AudioClip panelOpenAudioClip;
-    public AudioClip correctAudioClip;
-    public AudioClip wrongAudioClip;
-    public AudioClip gameStartAudioClip;
-
+    public Color mcqCorrectColor;
+    public Color mcqWrongColor;
 }
 [CustomEditor(typeof(ConstantsSO))]
 [CanEditMultipleObjects]

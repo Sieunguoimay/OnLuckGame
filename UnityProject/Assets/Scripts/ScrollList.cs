@@ -5,13 +5,13 @@ using UnityEngine;
 
 public class ScrollList : MonoBehaviour
 {
-    [SerializeField]
-    public GameObject ItemTemplate;
-
+    [SerializeField] public GameObject ItemTemplate;
+    [NonSerialized] public Transform parent;
     private List<GameObject> m_cachedItemList = new List<GameObject>();
     void Awake()
     {
         ItemTemplate.SetActive(false);
+        parent = ItemTemplate.transform.parent;
     }
     // Start is called before the first frame update
     void Start()
@@ -20,11 +20,11 @@ public class ScrollList : MonoBehaviour
     }
     public T CreateItem<T>()
     {
-        GameObject newItem = Instantiate(ItemTemplate) as GameObject;
+        var newItem = Instantiate(ItemTemplate) as GameObject;
 
         newItem.SetActive(true);
 
-        newItem.transform.SetParent(ItemTemplate.transform.parent, false);
+        newItem.transform.SetParent(parent, false);
 
         T item = newItem.GetComponent<T>();
 
@@ -59,7 +59,7 @@ public class ScrollList : MonoBehaviour
         {
             GameObject newItem = Instantiate(ItemTemplate) as GameObject;
             newItem.SetActive(true);
-            newItem.transform.SetParent(ItemTemplate.transform.parent, false);
+            newItem.transform.SetParent(parent, false);
 
             callback(newItem, i);
 

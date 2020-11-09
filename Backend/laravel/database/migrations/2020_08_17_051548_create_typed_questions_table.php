@@ -17,7 +17,7 @@ class CreateTypedQuestionsTable extends Migration
             $table->id();
             $table->bigInteger("pack_id");
             $table->string("question");
-            $table->string("answer");
+            $table->string("answers");
             $table->integer("score")->default(0);
             $table->string("images");
             $table->string("hints");

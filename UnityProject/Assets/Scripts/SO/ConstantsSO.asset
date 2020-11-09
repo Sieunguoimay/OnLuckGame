@@ -26,9 +26,5 @@ MonoBehaviour:
     type: 3}
   wrongAnswerSprite: {fileID: 21300000, guid: 5f49dd52fa79c80479147c684c5e725a, type: 3}
   congrateCupSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
-  buttonClickAudioClip: {fileID: 8300000, guid: be6fc636c650cdf41ba5db446ed06d42,
-    type: 3}
-  panelOpenAudioClip: {fileID: 8300000, guid: ce09caa7567e3194c870119b7cf70f75, type: 3}
-  correctAudioClip: {fileID: 8300000, guid: 6ecb7ad8e4abc30419ca0722af33cd52, type: 3}
-  wrongAudioClip: {fileID: 8300000, guid: df0ae6f664a01a8409c259f28b1a6311, type: 3}
-  gameStartAudioClip: {fileID: 8300000, guid: 1691b907733cd63429ec90d971d75ba0, type: 3}
+  mcqCorrectColor: {r: 0.40543234, g: 0.9716981, b: 0.2062567, a: 1}
+  mcqWrongColor: {r: 1, g: 0.26921812, b: 0.2028302, a: 1}

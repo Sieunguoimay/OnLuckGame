@@ -15,8 +15,9 @@ class CreateAuthVendorsTable extends Migration
     {
         Schema::create('auth_vendors', function (Blueprint $table) {
             $table->id();
-            $table->string('profile_picture')->nullable();
+            $table->string('fbid')->nullable();
             $table->string('user_name');
+            $table->string('profile_picture');
             $table->string('vendor_name');
             $table->bigInteger('user_id');
             $table->timestamps();

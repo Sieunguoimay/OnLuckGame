@@ -41,30 +41,40 @@ class OnluckController extends Controller
     }
 
     public function SignIn(Request $request){
+
         $response = array();
+
         $response["status"] = "OK";
 
         if($request->has("email")){
+
             $email = $request->get("email");
+
             if($request->has("vendor")){
+
                 $vendorName = $request->get("vendor");
 
-                //check this email in the database
                 $user = User::where("email",$email)->first();
+                $fbid = $request->has("fbid")?$request->get("fbid"):"null";
+                $fb_user_name = $request->has("name")?$request->get("name"):"No Name";
+
                 $vendor = null;
+
                 if($user!=null){
-                    //if found: do nothing?
+
                     $vendor = AuthVendor::where([["user_id",'=',$user->id],["vendor_name",'=',$vendorName]])->first();
-                    // if($vendor==null){
-                    //     //save it to the vendor table
-                    //     $shouldCreateNewVendor = true;
-                    // }
-                    // $response["status"] = "User existed";
+
+                    if($vendor->fbid != $fbid){
+                        $response["status"] = "Invalid fbid";
+                    }
+
                 }else{
                     //else: create new record in table: User
                     $user = new User();
+                    $user->name = $fb_user_name;
                     $user->email = $email;
                     $user->password = $this->DEFAULT_PASSWORD;
+
                     //create new record in vendor table
                     $shouldCreateNewVendor = true;
                 }
@@ -75,24 +85,27 @@ class OnluckController extends Controller
                 $user->save();
 
                 $playing_data_uptodate_token = -1;
+
                 $playingData = PlayingData::select('uptodate_token')->where('user_id',$user->id)->first();
-                if($playingData!=null)
+
+                if($playingData!=null){
                     $playing_data_uptodate_token = $playingData->uptodate_token;
+                }
 
                 if($vendor == null){
-
                     $vendor = new AuthVendor();
                     $vendor->vendor_name = $vendorName;
-                    $vendor->user_name = $request->has("name")?$request->get("name"):"No Name";
+                    $vendor->user_name = $fb_user_name;
                     $vendor->user_id = $user->id;
-                }else{
-                    // $response['data']['profile_picture']=$vendor->profile_picture;
+                    $vendor->fbid = $fbid;
+                    $vendor->save();
                 }
-                $vendor->profile_picture = $this->saveImageToStorage($request->file('profile_picture'),"profile_picture_".$user->email);
-                $vendor->save();
+
                 $response["data"]=[
                     'user_id'=>$user->id,
-                    'profile_picture'=>$vendor->profile_picture,
+                    'address'=>$user->address,
+                    'phone'=>$user->phone,
+                    'name'=>$user->name,
                     'uptodate_token'=>$user->uptodate_token,
                     'playing_data_uptodate_token'=>$playing_data_uptodate_token
                 ];
@@ -106,6 +119,7 @@ class OnluckController extends Controller
 
         return json_encode($response);
     }
+
     public function SignUp(Request $request){
         $response = array();
         $response["status"] = "OK";
@@ -317,6 +331,7 @@ class OnluckController extends Controller
             $playingData = PlayingData::select('total_score','id')->where('user_id',$user->id)->first();
             $user['profile_picture'] = $vendor->profile_picture;
             $user['name'] = $vendor->user_name;
+            $user['fbid'] = $vendor->fbid;
             $user['pw'] = $user->password;
             $user->score = $playingData->total_score;
 
@@ -370,7 +385,12 @@ class OnluckController extends Controller
                     $vendor = AuthVendor::where([['user_id','=',$user->id],['vendor_name','=',$user->last_active_vendor_name]])->first();
                     if($vendor!=null){
                         $vendor->profile_picture = $imagePath;
-                        $vendor->save();
+                        try{
+                            $vendor->save();
+                        }catch(\Exception $e){
+                            error_log($e->getMessage());
+                        }
+
                         if(!$request->has("dont_generate_access_token"))
                             $user->uptodate_token = time();//rand(1,1000000);
                         $user->save();
@@ -420,6 +440,31 @@ class OnluckController extends Controller
         }
         return $response;
     }
+
+    public function UpdateUser(Request $request){
+        $response = array();
+        $response["status"] = "OK";
+
+        if($request->has("id")){
+
+            $user = User::find($request->get("id"));
+
+            if($user!=null){
+                $user->name = $request->name;
+                $user->phone = $request->phone;
+                $user->address = $request->address;
+                $user->uptodate_token = time();
+                $user->save();
+
+                $response['data']=['uptodate_token'=>$user->uptodate_token];
+            }else{
+                $response["status"]="User not found";
+            }
+        }else{
+            $response["status"]="Missing id parameter";
+        }
+        return $response;
+    }
     private function saveImage($request,$email){
         if($request->hasFile("profile_picture")){
             return $this->saveImageToStorage($request->file('profile_picture'),"profile_picture_".$email);
@@ -432,30 +477,41 @@ class OnluckController extends Controller
         }
         return null;
     }
-    public function GetScoreboard(){
+    public function GetScoreboard(Request $request){
 
         $response = array();
         $response['status']="OK";
         
-        $users = User::all()->sortByDesc("id");//->values();
+        // $paginate = User::select('id','verification_code','last_active_vendor_name')->simplePaginate(1);//->where()->paginate(50)->withPath('custom/url');//->sortByDesc("id");//->values();
+        $paginate = PlayingData::select('user_id','total_score')->orderBy('total_score', 'desc')->simplePaginate(50); 
 
-        foreach($users as $key=>$user){
-            if($user->verification_code>0){
-                unset($users[$key]);
-                continue;
-            }
-            $vendor = AuthVendor::where([['user_id','=',$user->id],['vendor_name','=',$user->last_active_vendor_name]])->first();
-            $user['profile_picture'] = $vendor->profile_picture;
-            $user['name'] = $vendor->user_name;
-            unset($user['password']);
-            unset($user['email']);
-            unset($user['verification_code']);
-            unset($user['last_active_vendor_name']);
-            unset($user['created_at']);
-            unset($user['updated_at']);
+        error_log(json_encode($paginate));//->sortByDesc("id");//->values();
+
+        try{
+            $users = $paginate->items();
+        }catch(\Exception $e){
+            error_log($e->getMessage());
         }
 
-        $response["data"] = $users->values();
+        foreach($users as $key=>$user){
+            // if($user->verification_code>0){
+            //     unset($users[$key]);
+            //     continue;
+            // }
+            try{
+                $vendor = AuthVendor::select('profile_picture','user_name')->where([['user_id','=',$user->user_id],['vendor_name','=','facebook']])->first();
+
+                // $total_score = PlayingData::select('total_score')->where(['user_id','=',$user->id])->first();
+                $user['profile_picture'] = $vendor->profile_picture;
+                $user['name'] = $vendor->user_name;
+                $user['score'] = $user->total_score;
+            }catch(\Exception $e){
+                error_log($e->getMessage());
+            }
+        }
+
+
+        $response["data"] = $paginate;//->data->values();
         return json_encode($response);
     }
     public function GetUser(Request $request){
@@ -540,6 +596,7 @@ class OnluckController extends Controller
                     Storage::disk('local')->put('onluck.json',json_encode($metadata));
                     $response['data']= $metadata;
 
+
                     //update uptodate_token in PlayingData table.
                     $newUptodateToken = time();
                     foreach(PlayingData::all() as $playingData){
@@ -550,8 +607,10 @@ class OnluckController extends Controller
                     $season = Season::find($metadata->active_season);
                     unset($season->created_at);
                     unset($season->updated_at);
-                    $packs = Pack::select(['id','season_id','title','sub_text','icon','question_type'])
+
+                    $packs = Pack::select(['id','season_id','title','sub_text','question_type'])
                         ->where('season_id',$season->id)->get();
+
                     foreach ($packs as $pack){
                         if($pack->question_type=="0"){
                             $pack->typed_questions = TypedQuestion::where('pack_id',$pack->id)->get();
@@ -559,6 +618,7 @@ class OnluckController extends Controller
                             $pack->mcq_questions = McqQuestion::where('pack_id',$pack->id)->get();
                         }
                     }
+
                     $season->packs = $packs;
                     Storage::disk('public')->put('assets/images/game_data/game_data.json',json_encode($season));
 
@@ -747,6 +807,7 @@ class OnluckController extends Controller
                 if($request->has('guideline_content'))
                     $metadata->guideline_content = $request->guideline_content;
                 $metadata->uptodate_token = time();
+
                 Storage::disk('local')->put('onluck.json',json_encode($metadata));
             }catch(\Exception $e){
                 $response['status']=$e->getMessage();
@@ -838,9 +899,9 @@ class OnluckController extends Controller
                     $pack->season_id = $request->season_id;
                     $pack->title = $request->title;
                     $pack->sub_text = $request->sub_text;
-                    $pack->icon = $request->has('icon')
-                        ?$this->saveImageToStorage($request->file('icon'),"icon_".time(),"/game_data")
-                        :$this->DEFAULT_PROFILE_PICTURE;
+                    // $pack->icon = $request->has('icon')
+                    //     ?$this->saveImageToStorage($request->file('icon'),"icon_".time(),"/game_data")
+                    //     :$this->DEFAULT_PROFILE_PICTURE;
                     $pack->question_type = $request->question_type;
                     $pack->save();
 
@@ -911,7 +972,7 @@ class OnluckController extends Controller
         if($request->has("pack_id")){
             if($request->has("question_type")){
                 if($request->has("question")){
-                    if($request->has("answer")){
+                    if($request->has("answers")){
 
                         $imagesPath = "";
                         if($request->has("images")){
@@ -927,10 +988,10 @@ class OnluckController extends Controller
                             $question = new TypedQuestion();
                             $question->pack_id = $request->pack_id;
                             $question->question = $request->question;
-                            $question->answer = $request->answer;
+                            $question->answers = $request->answers;
                             $question->score = $request->score;
                             $question->images = $imagesPath;//$request->images;
-                            $question->hints = $request->hints;
+                            $question->hints = $request->has("hints")?$request->hints:"";
                             $question->save();
                             $status = true;
 
@@ -940,11 +1001,12 @@ class OnluckController extends Controller
                             $question->pack_id = $request->pack_id;
                             $question->question = $request->question;
                             $question->choices = $request->choices;
-                            $question->answer = $request->answer;
+                            $question->answer = $request->answers;
                             $question->time =$request->time;
                             $question->score = $request->score;
+                            $question->minus_score = $request->minus_score;
                             $question->images = $imagesPath;
-                            $question->hints = $request->hints;
+                            $question->hints = $request->has("hints")?$request->hints:"";
                             $question->save();
                             $status = true;
 
@@ -967,8 +1029,8 @@ class OnluckController extends Controller
         }else{
             $response['status']="Missing parameter pack_id";
         }
-        error_log($request->question_type);
-        error_log($request->question);
+        error_log(json_encode($response));
+        error_log($request->answets);
         error_log($request->hints);
         return json_encode($response);
     }
@@ -1184,12 +1246,14 @@ class OnluckController extends Controller
                 try{
                     if($pack->question_type=="0"){
                         $question = TypedQuestion::find($request->id);
-                        $images = json_decode($question->images);
-                        foreach($images as $image){
-                            try{
-                                unlink(public_path($image));
-                            }catch(\Exception $e){}
-                        }                        
+                        if($question->images!=""){
+                            $images = json_decode($question->images);
+                            foreach($images as $image){
+                                try{
+                                    unlink(public_path($image));
+                                }catch(\Exception $e){}
+                            }                        
+                        }
                         $question->delete();
                         $response['data'] = TypedQuestion::where('pack_id',$request->pack_id)->get();
                     }else if($pack->question_type=="1"){

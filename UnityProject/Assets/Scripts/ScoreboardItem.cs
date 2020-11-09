@@ -8,16 +8,8 @@ public class ScoreboardItem : MonoBehaviour
     public Text UiUserNameText;
     public Text UiScoreText;
     public Image UiProfilePictureImage;
-    public GameObject UiRankImage;
-    void Awake()
-    {
-        UiRankImage.SetActive(false);
-    }
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public Text UIRankText;
+
 
     public void SetUserName(string name)
     {
@@ -38,18 +30,6 @@ public class ScoreboardItem : MonoBehaviour
     }
     public void SetRank(int rank)
     {
-        UiRankImage.SetActive(true);
-        switch (rank)
-        {
-            case 0:
-                UiRankImage.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.rank1IconSprite;
-                break;
-            case 1:
-                UiRankImage.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.rank2IconSprite;
-                break;
-            case 2:
-                UiRankImage.GetComponent<Image>().sprite = AssetsDataMart.Instance.constantsSO.rank3IconSprite;
-                break;
-        }
+        UIRankText.text = (rank+1).ToString();
     }
 }

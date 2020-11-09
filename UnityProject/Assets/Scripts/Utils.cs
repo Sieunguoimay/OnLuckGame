@@ -65,9 +65,7 @@ public class Utils /*: MonoBehaviour*/
     private static Utils s_instance = null;
     public MonoBehaviour context = null;
     private string root = "/";
-    public delegate void RequestCallback(string response);
-    public delegate void NoInternetCallback();
-    public NoInternetCallback networkErrorCallback = null;
+    public Action networkErrorCallback = null;
     // Start is called before the first frame update
     public static Utils Instance
     {
@@ -90,12 +88,12 @@ public class Utils /*: MonoBehaviour*/
         context = monoBehaviour;
     }
 
-    public void GetRequest(string uri, RequestCallback callback = null)
+    public void GetRequest(string uri, Action<string> callback = null)
     {
         context.StartCoroutine(getRequest(uri,callback));
     }
 
-    IEnumerator getRequest(string uri, RequestCallback callback)
+    IEnumerator getRequest(string uri, Action<string> callback)
     {
         using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
         {
@@ -116,9 +114,7 @@ public class Utils /*: MonoBehaviour*/
             }
             else
             {
-                //Debug.Log(pages[page] + ":\nReceived: " + webRequest.downloadHandler.text);
-                if(callback!=null)
-                    callback(webRequest.downloadHandler.text);
+                callback?.Invoke(webRequest.downloadHandler.text);
             }
         }
     }
@@ -138,14 +134,11 @@ public class Utils /*: MonoBehaviour*/
             }
         }
     }
-    public void PostRequest(string url, string str, RequestCallback callback)
+    public void PostRequest(string url, string str, Action<string> callback)
     {
-        //Debug.Log("PostRequest" + url);
-        //int session = 10;
-        //str = "{\"session\":" + session + ",\"data\":" + str + "}";
         context.StartCoroutine(postRequest(url, str, callback));
     }
-    IEnumerator postRequest(string url, string str, RequestCallback callback)
+    IEnumerator postRequest(string url, string str, Action<string> callback)
     {
         Debug.Log("postRequest" + url);
         UnityWebRequest request = new UnityWebRequest(url, "POST");
@@ -154,28 +147,24 @@ public class Utils /*: MonoBehaviour*/
         request.downloadHandler = (DownloadHandler)new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
 
-        Debug.Log("postRequest2" + url);
         yield return request.SendWebRequest();
-        Debug.Log("postRequest3" + url);
 
         if (request.isNetworkError || request.isHttpError)
         {
             Debug.Log(request.error);
-            if (networkErrorCallback != null)
-                networkErrorCallback();
+            networkErrorCallback?.Invoke();
         }
         else
         {
             Debug.Log("Form upload complete!");
-            if (callback != null)
-                callback(request.downloadHandler.text);
+            callback?.Invoke(request.downloadHandler.text);
         }
     }
-    public void PostRequest(string url, WWWForm formData, RequestCallback callback)
+    public void PostRequest(string url, WWWForm formData, Action<string> callback)
     {
         context.StartCoroutine(postRequest(url,formData,callback));
     }
-    IEnumerator postRequest(string url,WWWForm formData, RequestCallback callback)
+    IEnumerator postRequest(string url,WWWForm formData, Action<string> callback)
     {
         //List<IMultipartFormSection> formData = new List<IMultipartFormSection>();
         //formData.Add(new MultipartFormDataSection("field1=foo&field2=bar"));
@@ -188,29 +177,26 @@ public class Utils /*: MonoBehaviour*/
         if (request.isNetworkError || request.isHttpError)
         {
             Debug.Log(request.error);
-            if (networkErrorCallback != null)
-                networkErrorCallback();
+            networkErrorCallback?.Invoke();
         }
         else
         {
             Debug.Log("Form upload complete!");
-            if (callback != null)
-                callback(request.downloadHandler.text);
+            callback?.Invoke(request.downloadHandler.text);
         }
     }
 
-    public delegate void LoadImageCallback(Texture2D texture);
-    public void LoadImage(string url, LoadImageCallback callback)
+    public void LoadImage(string url, Action<Texture2D> callback)
     {
         //return File.ReadAllBytes(path);
         context.StartCoroutine(loadImage(url, callback));
     }
-    private IEnumerator loadImage(string url, LoadImageCallback callback)
+    private IEnumerator loadImage(string url, Action<Texture2D> callback)
     {
         using (WWW www = new WWW(url))
         {
             yield return www;
-            callback(www.texture);
+            callback?.Invoke(www.texture);
             Debug.Log("loaded image " + url);
         }
     }
@@ -243,10 +229,7 @@ public class Utils /*: MonoBehaviour*/
         string temp = s.Normalize(NormalizationForm.FormD);
         return regex.Replace(temp, String.Empty).Replace('\u0111', 'd').Replace('\u0110', 'D');
     }
-    //public void SaveJsonToFile(string json, string fileName)
-    //{
-    //    File.WriteAllText(fileName, json);
-    //}
+
     [Serializable]
     public class JsonWrapper<T>
     {
@@ -265,14 +248,6 @@ public class Utils /*: MonoBehaviour*/
         Debug.Log("Saved json: " + jsonData);
         File.WriteAllText(root + "/" + fileName, jsonData);
 
-
-        //serialize
-        //using (Stream stream = File.Open(serializationFile, FileMode.Create))
-        //{
-        //    var bformatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-
-        //    bformatter.Serialize(stream, salesmanList);
-        //}
 
     }
     public T LoadFileToObject<T>(string fileName)
@@ -334,7 +309,7 @@ public class Utils /*: MonoBehaviour*/
         return obj;
     }
     public delegate void LoadFileAsyncCallback(Texture2D texture);
-    public void LoadTextureFileAsync(string fileName, LoadFileAsyncCallback callback)
+    public void LoadTextureFileAsync(string fileName, Action<Texture2D> callback)
     {
         if(context!=null)
             context.StartCoroutine(loadFileAsync(fileName,callback));
@@ -342,13 +317,12 @@ public class Utils /*: MonoBehaviour*/
 
     // Use this for initialization
     [Obsolete]
-    IEnumerator loadFileAsync(string fileName, LoadFileAsyncCallback callback)
+    IEnumerator loadFileAsync(string fileName, Action<Texture2D> callback)
     {
         Debug.Log("loadFileAsync: "+ root + "/" + fileName);
         WWW www = new WWW(root + "/" + fileName);
         while (!www.isDone) yield return null;
-        if(callback!=null)
-            callback(www.texture);
+        callback?.Invoke(www.texture);
     }
 
     public void SetAndStretchToParentSize(RectTransform _mRect, RectTransform _parent)
@@ -369,20 +343,6 @@ public class Utils /*: MonoBehaviour*/
         DateTime utcDate = DateTime.UtcNow;
         return utcDate.ToString(new CultureInfo("en-GB"));
     }
-
-    //public delegate void ShowListCallback(GameObject item, int index);
-    //public void CreateList<T>(int number,GameObject ItemTemplate, ShowListCallback callback)
-    //{
-
-    //    for (int i = 0; i < number; i++)
-    //    {
-    //        GameObject newItem = MonoBehaviour.Instantiate(ItemTemplate) as GameObject;
-    //        newItem.SetActive(true);
-    //        newItem.transform.SetParent(ItemTemplate.transform.parent, false);
-
-    //        callback(newItem, i);
-    //    }
-    //}
 
 
     public void showToast(string text,int duration, Text txt)

@@ -8,19 +8,15 @@ using System;
 
 namespace Assets.Scripts.GameScene
 {
-    public class MainGamePresenter
+    public class MainGamePresenter : MonoBehaviour, ILoadQuestionListener
     {
+        public enum Modes { TYPING_ANSWER, MCQ }
 
-
-        public enum Modes{TYPING_ANSWER,MCQ}
-
-        private static MainGamePresenter s_instance = null;
-        public static MainGamePresenter Instance { get { if (s_instance == null) s_instance = new MainGamePresenter(); return s_instance; } }
-
-        public bool IsPlayingInMCQNow { get; private set; }
         public Modes Mode { private set; get; }
 
-        private MainGame mainGame = null;
+        public bool IsPlayingInMCQNow { get; private set; }
+
+        private MainGame mainGame;
         private QuestionDataMart.Pack pack = null;
         private PlayingDataMart.Pack playingPack = null;
         private int currentQuestionIndex = 0;
@@ -29,81 +25,84 @@ namespace Assets.Scripts.GameScene
         private QuestionDataMart.TypedQuestion downloadedTypedQuestion;
         private QuestionDataMart.MCQQuestion downloadedMCQQuestion;
 
-        public Action<int,int> outputDataOnExit = null;
-        public Utils.Neuron outputPlayingDataNeuron = new Utils.Neuron(2);
 
-        private MainGamePresenter()
+        private void Awake()
         {
             Debug.Log("MainGamePresenter created: stuff created once goes here");
 
-            PlayingDataMart.Instance.m_scoreChangedCallback = OnScoreChanged;
+            mainGame = GetComponent<MainGame>();
 
-            outputDataOnExit = GameLogic.Instance.OnPlayingDataOutputted;
-
-            outputPlayingDataNeuron.output = () =>
-            {
-                outputDataOnExit(packIndex, recentlyUnlockedQuestionIndex);
-
-                outputPlayingDataNeuron.inputs[0].Reset();
-                outputPlayingDataNeuron.inputs[1].Reset();
-            };
-
+            StartGame(Main.Instance.currentPackIndex);
         }
 
-        public void StartGame(QuestionDataMart.Pack pack,PlayingDataMart.Pack playingPack, int packIndex)
+        public void StartGame(int packIndex)
         {
-            this.pack = pack;
-            this.playingPack = playingPack;
+            pack = QuestionDataMart.Instance.packs[packIndex];
+
+            playingPack = PlayingDataMart.Instance.playingPacks[packIndex];
+
             this.packIndex = packIndex;
 
-            currentQuestionIndex = playingPack.currentIndex==playingPack.playingQuestions.Count? playingPack.currentIndex-1: playingPack.currentIndex;
+            currentQuestionIndex = playingPack.currentIndex == playingPack.playingQuestions.Count ? playingPack.currentIndex - 1 : playingPack.currentIndex;
+
             recentlyUnlockedQuestionIndex = playingPack.currentIndex;
 
-            if (pack.question_type == 0) Mode = Modes.TYPING_ANSWER;
-            else if (pack.question_type == 1) Mode = Modes.MCQ;
+            if (pack.question_type == 0)
+            {
+                Mode = Modes.TYPING_ANSWER;
+            }
 
-            Debug.Log("MainGamePresenter: Start the game");
-            SceneManager.LoadScene("main_game");
-        }
+            else if (pack.question_type == 1)
+            {
+                Mode = Modes.MCQ;
+            }
 
-
-        public MainGamePresenter Ready(MainGame rMainGame)
-        {
-            mainGame = rMainGame;
             if (UserDataMart.Instance.m_userData != null)
             {
-                mainGame.SetAvatar(UserDataMart.Instance.m_userData.texProfilePicture);
-                mainGame.SetUserName(UserDataMart.Instance.m_userData.name);
+                mainGame.userInfoBar.SetAvatar(UserDataMart.Instance.m_userData.texProfilePicture);
+                mainGame.userInfoBar.SetUserName(UserDataMart.Instance.m_userData.name);
             }
-            mainGame.SetScore(PlayingDataMart.Instance.m_score);
+            mainGame.userInfoBar.SetScore(PlayingDataMart.Instance.Score);
             mainGame.SetAnswerMode(Mode);
             mainGame.SetQuestionPackTitleText(pack.title);
             mainGame.SetSeasonText(QuestionDataMart.Instance.season.name, recentlyUnlockedQuestionIndex, playingPack.playingQuestions.Count);
 
-            outputPlayingDataNeuron.inputs[0].Reset();
-            outputPlayingDataNeuron.inputs[1].Reset();
+            mainGame.utilityButtons.SeeAnswerButtonClicked += RevealAnswerByWatchingVideo;
 
             GameLogic.Instance.trackKeeper.Reset();
+            QuestionDataMart.Instance.QuestionLoadListener = this;
 
             OpenQuestion(currentQuestionIndex);
+
+
             Debug.Log("MainGamePresenter: The Game Start from here");
-            return this;
         }
+
+
 
         public void Terminate()
         {
-            if (IsPlayingInMCQNow) MCQForceEnding();
+            if (IsPlayingInMCQNow)
+            {
+                MCQForceEnding();
+            }
+
+            GameLogic.Instance.OnPlayingDataOutputted(packIndex, recentlyUnlockedQuestionIndex);
+
+            Main.Instance.OpenMenuScene();
+
             Debug.Log("Escaped from the game");
-            SceneManager.LoadScene("menu");
-            outputPlayingDataNeuron.inputs[0].Signal();
         }
-        public void OnQuit()
+
+        public void OnApplicationQuit()
         {
-            if (IsPlayingInMCQNow) MCQForceEnding();
-            outputPlayingDataNeuron.inputs[0].Reset();
-            outputPlayingDataNeuron.inputs[1].Reset();
-            outputPlayingDataNeuron.inputs[0].Signal();
-            outputPlayingDataNeuron.inputs[1].Signal();
+            if (IsPlayingInMCQNow)
+            {
+                MCQForceEnding();
+            }
+
+            GameLogic.Instance.OnPlayingDataOutputted(packIndex, recentlyUnlockedQuestionIndex);
+
             Debug.Log("MainGamePresenter:OnQuit");
         }
 
@@ -114,133 +113,67 @@ namespace Assets.Scripts.GameScene
             {
                 return;
             }
-            HttpClient.Instance.GetQuestionById(pack.questions[index].id, pack.question_type, (questionWrapper) =>
-            {
-                if (questionWrapper != null)
-                {
-                    if(questionWrapper.type == 0)
-                    {
-                        HttpClient.TypedQuestion q = questionWrapper.typed_question;
-                        downloadedTypedQuestion = new QuestionDataMart.TypedQuestion()
-                        {
-                            id = q.id,
-                            question = q.question,
-                            answer = q.answer,
-                            score = q.score,
-                            images = new List<QuestionDataMart.Image>()
-                        };
 
-                        List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                        foreach (string img in images)
-                        {
-                            QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
-                            downloadedTypedQuestion.images.Add(image);
-                            Utils.Instance.LoadImage(HttpClient.Instance.BaseUrl + img, (texture) =>
-                            {
-                                Debug.Log("Downloaded " + img);
-                                image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
-                                mainGame.SetQuestionImages(downloadedTypedQuestion.images);
-                            });
-                        }
-                        downloadedTypedQuestion.hints = new List<string>();
-                        List<string> hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
-                        foreach (string hint in hints)
-                            downloadedTypedQuestion.hints.Add(hint);
+            currentQuestionIndex = index;
 
-                    }
-                    else
-                    {
-                        HttpClient.McqQuestion q = questionWrapper.mcq_question;
-                        downloadedMCQQuestion = new QuestionDataMart.MCQQuestion()
-                        {
-                            id = q.id,
-                            question = q.question,
-                            choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
-                            answer = q.answer,
-                            time = q.time,
-                            score = q.score,
-                            images = new List<QuestionDataMart.Image>()
-                        };
+            mainGame.DisableAllUI();
 
-                        List<string> images = Utils.Instance.FromJsonList<List<string>>(q.images);
-                        foreach (string img in images)
-                        {
-                            QuestionDataMart.Image image = new QuestionDataMart.Image() { path = img };
-                            downloadedMCQQuestion.images.Add(image);
-                            Utils.Instance.LoadImage(HttpClient.Instance.BaseUrl + img, (texture) =>
-                            {
-                                Debug.Log("Downloaded " + img);
-                                image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
-                                mainGame.SetQuestionImages(downloadedMCQQuestion.images);
-                            });
-                        }
-                        downloadedMCQQuestion.hints = new List<string>();
-                        List<string> hints = Utils.Instance.FromJsonList<List<string>>(q.hints);
-                        foreach (string hint in hints)
-                            downloadedMCQQuestion.hints.Add(hint);
-                    }
-                    openQuestion(index);
-                }
-                else
-                {
-
-                }
-            });
+            QuestionDataMart.Instance.LoadQuestion(pack.questions[index].id, pack.question_type);
         }
 
-        private void openQuestion(int index)
+        public void OnLoadQuestionResult(QuestionDataMart.TypedQuestion typedQuestion, QuestionDataMart.MCQQuestion mcqQuestion)
         {
-            currentQuestionIndex = index;
-            if (currentQuestionIndex < getQuestionPackCount())
+            downloadedTypedQuestion = typedQuestion;
+            downloadedMCQQuestion = mcqQuestion;
+
+            openQuestion();
+        }
+
+        public void OnLoadQuestionFailed()
+        {
+            currentQuestionIndex = getQuestionPackCount;
+
+            mainGame.EnableUIOnLoadQuestionFailed();
+        }
+
+        public void OnLoadImageResult(QuestionDataMart.Image image)
+        {
+            if (image != null)
             {
-                QuestionDataMart.Question question = getQuestion(index);
-                //Set all other info to the question panel here.
-                mainGame.HideHintPanel();
-                mainGame.SetQuestion(question.question);
-                mainGame.SetQuestionNumber(index + 1);
-                mainGame.SetQuestionImages(question.images);
-                mainGame.SetUiPrevButtonInteractable(currentQuestionIndex != 0);
+                mainGame.UiImageSlideshow.SetQuestionImages(getQuestion().images);
+            }
+            else
+            {
+                mainGame.UiImageSlideshow.SetToDefault();
+            }
+        }
+
+        private void openQuestion()
+        {
+            if (currentQuestionIndex < getQuestionPackCount)
+            {
+                var question = getQuestion();
+
+                mainGame.EnableAllUI();
+
+                mainGame.ShowQuestion(question.question, question.images);
+                mainGame.SetQuestionNumber(currentQuestionIndex + 1);
+                mainGame.LockPrevButton(currentQuestionIndex != 0);
+                mainGame.imageSlideShowAnimator.gameObject.SetActive(true);
+                mainGame.imageSlideShowAnimator.SetTrigger("show");
 
                 bool state = false;
+
                 if (currentQuestionIndex + 1 < playingPack.playingQuestions.Count)
-                    if (!IsQuestionLocked(currentQuestionIndex + 1))
-                        state = true;
-                //Debug.Log("SetUiNextButtonInteractable " + state);
-                mainGame.SetUiNextButtonInteractable(state);
+                {
+                    state = !IsQuestionLocked(currentQuestionIndex + 1);
+                }
+                mainGame.LockNextButton(state);
 
                 if (!IsQuestionLocked(currentQuestionIndex))
                 {
                     GameLogic.Instance.trackKeeper.ActivateQuestionPlayingData(playingPack.playingQuestions[currentQuestionIndex]);
                     GameLogic.Instance.hintManager.remainingScore = question.score;
-                    int usedHintCount = playingPack.playingQuestions[currentQuestionIndex].used_hint_count;
-
-                    if (question.hints.Count > 0 && PlayingDataMart.Instance.m_score > 0)
-                    {
-                        mainGame.SetHintUiInteractable(true);
-                        if (IsQuestionActive(currentQuestionIndex) && usedHintCount < question.hints.Count)
-                        {
-                            mainGame.SetHintPriceActive(true);
-                            mainGame.SetHintPrice(GameLogic.Instance.hintManager.GetHintPrice(usedHintCount));
-                        }
-                        else
-                        {
-                            mainGame.SetHintPriceActive(false);
-                        }
-                        Debug.Log("OpenQuestion: Enough money");
-                    }
-                    else
-                    {
-                        Debug.Log("OpenQuestion: Not enough money: your money = " + PlayingDataMart.Instance.m_score + ", hints count = " + question.hints.Count);
-                        if (!IsQuestionActive(currentQuestionIndex))
-                            mainGame.SetHintUiInteractable(true);
-                        else
-                        {
-                            if (usedHintCount > 0)
-                                mainGame.SetHintUiInteractable(true);
-                            else
-                                mainGame.SetHintUiInteractable(false);
-                        }
-                    }
                 }
                 else
                 {
@@ -249,35 +182,39 @@ namespace Assets.Scripts.GameScene
 
                 if (Mode == Modes.TYPING_ANSWER)
                 {
+                    var typedQuestion = getTypedQuestion(/*currentQuestionIndex*/);
+
+                    var isActive = IsQuestionActive(currentQuestionIndex);
+
                     mainGame.ClearAnswerInputField();
-                    if (IsQuestionActive(currentQuestionIndex))
-                    {
-                        mainGame.SetUiInteractableInTypingMode(true);
-                        mainGame.SetPrevAnswer("");
-                    }
-                    else
-                    {
-                        mainGame.SetUiInteractableInTypingMode(false);
-                        //m_rMainGame.SetPrevAnswer(pack.typed_questions[m_currentQuestionIndex].answer);
-                        mainGame.SetPrevAnswer(getTypedQuestion(currentQuestionIndex).answer);
-                    }
+
+                    mainGame.utilityButtons.hintPanel.SetHintAndAnswer(typedQuestion.hints, typedQuestion.FirstAnswer);
+
+                    mainGame.utilityButtons.ShouldShowHintButton = typedQuestion.hints.Count > 0;
+
+                    mainGame.utilityButtons.ResetAll(isActive);
+
+                    mainGame.LockAnswerPanel(isActive);
+
                 }
                 else if (Mode == Modes.MCQ)
                 {
-                    var mcqQuestion = getMCQQuestion(currentQuestionIndex);
+                    var mcqQuestion = getMCQQuestion(/*currentQuestionIndex*/);
+
+                    mainGame.ClearMCQChoicesUI();
                     mainGame.SetMCQChoices(mcqQuestion.choices);
-                    mainGame.ClearMCQChoicesColor();
 
                     if (IsQuestionActive(currentQuestionIndex))
                     {
                         mainGame.StartTimer(mcqQuestion.time);
+
                         IsPlayingInMCQNow = true;
                     }
                     else
                     {
-                        int correctAnswer = mcqQuestion.answer;
-                        mainGame.ShowMCQAnswer(-1, correctAnswer);
+                        mainGame.ShowMCQAnswer(-1, mcqQuestion.answer);
                         mainGame.ResetTimer(0);
+
                         IsPlayingInMCQNow = false;
                     }
                 }
@@ -287,7 +224,7 @@ namespace Assets.Scripts.GameScene
 
         public void NextQuestion()
         {
-            if (currentQuestionIndex < getQuestionPackCount()-1
+            if (currentQuestionIndex < getQuestionPackCount - 1
                 && !IsQuestionLocked(currentQuestionIndex + 1))
             {
                 if (IsPlayingInMCQNow)
@@ -331,134 +268,149 @@ namespace Assets.Scripts.GameScene
 
         public void VerifyTypedAnswer(string answer)
         {
-            answer = Utils.Instance.convertToUnSign3(answer).ToLower();
-            var typedQuestion = getTypedQuestion(currentQuestionIndex);
-            if (Utils.Instance.convertToUnSign3(typedQuestion.answer.ToLower()).Equals(answer))
+            mainGame.SetPrevAnswer(answer);
+
+            var typedQuestion = getTypedQuestion(/*currentQuestionIndex*/);
+
+            if (typedQuestion.CheckAnswer(answer))
             {
-                GameLogic.Instance.trackKeeper.TerminateQuestionData(playingPack.playingQuestions[currentQuestionIndex], 'c');
-                bool unlockStatus = UnlockQuestion(currentQuestionIndex + 1);
 
-                if (currentQuestionIndex == playingPack.playingQuestions.Count-1) 
+                if (currentQuestionIndex == playingPack.playingQuestions.Count - 1)
+                {
                     mainGame.ShowCongratePopup(pack.title, PlayingDataMart.Instance.playingData.total_score);
-                else 
-                    mainGame.ShowCorrectAnswer(AssetsDataMart.Instance.constantsSO.stringsSO.next_question,PlayingDataMart.Instance.playingData.total_score,GameLogic.Instance.hintManager.remainingScore);
+                }
+                else
+                {
+                    mainGame.ShowCorrectAnswerPopup(AssetsDataMart.Instance.constantsSO.stringsSO.next_question, PlayingDataMart.Instance.playingData.total_score, GameLogic.Instance.hintManager.remainingScore);
+                }
 
-                mainGame.SetSeasonText(QuestionDataMart.Instance.season.name,
-                    unlockStatus ? recentlyUnlockedQuestionIndex : recentlyUnlockedQuestionIndex + 1, 
-                    playingPack.playingQuestions.Count);
-                mainGame.SetUiInteractableInTypingMode(false);
-                mainGame.SetHintPriceActive(false);
-                //m_rMainGame.SetHintUiInteractable(false);
-                mainGame.SetPrevAnswer(answer);
-                mainGame.SetUiNextButtonInteractable(false);
-                if(currentQuestionIndex + 1 < playingPack.playingQuestions.Count)
-                    if(!IsQuestionLocked(currentQuestionIndex + 1))
-                        mainGame.SetUiNextButtonInteractable(true);
+                //mainGame.SetSeasonText(QuestionDataMart.Instance.season.name,
+                //    unlockStatus ? recentlyUnlockedQuestionIndex : recentlyUnlockedQuestionIndex + 1,
+                //    playingPack.playingQuestions.Count);
 
-                PlayingDataMart.Instance.AddScore(typedQuestion.score);
-                //playingPack.playingQuestions[m_currentQuestionIndex].ended = (new System.DateTime()).ToString();
+                EndTypedQuestion(true);
+
+
+                AudioController.Instance.PlayCorrectSound();
+
+                PlayingDataMart.Instance.Score += typedQuestion.score;
 
                 Debug.Log("Dung roi ban ey");
-                mainGame.PlayAudio(AssetsDataMart.Instance.constantsSO.correctAudioClip);
-
-                //HttpClient.Instance.NotifyServerOnQuestionAnswered()
             }
             else
             {
-                mainGame.ShowWrongAnswer(
-                    AssetsDataMart.Instance.constantsSO.stringsSO.try_again,
-                    AssetsDataMart.Instance.constantsSO.stringsSO.incorrect, 
-                    GameLogic.Instance.hintManager.remainingScore);
+                mainGame.ShowWrongTypedAnswer();
+
+                AudioController.Instance.PlayWrongSound();
+
                 Debug.Log("Sai roi ban ey");
-                mainGame.PlayAudio(AssetsDataMart.Instance.constantsSO.wrongAudioClip);
             }
         }
-        public void VerifyMCQAnswer(int answer,bool isForcingEnding = false)
+
+        private void EndTypedQuestion(bool correct)
+        {
+            GameLogic.Instance.trackKeeper.TerminateQuestionData(playingPack.playingQuestions[currentQuestionIndex], correct?'c':'w');
+
+            UnlockQuestion(currentQuestionIndex + 1);
+
+
+            mainGame.LockAnswerPanel(false);
+            mainGame.LockNextButton(false);
+
+            if (currentQuestionIndex + 1 < playingPack.playingQuestions.Count)
+            {
+                if (!IsQuestionLocked(currentQuestionIndex + 1))
+                {
+                    mainGame.LockNextButton(true);
+                }
+            }
+        }
+
+        public void VerifyMCQAnswer(int answer, bool isForcingEnding = false)
         {
             IsPlayingInMCQNow = false;
-            QuestionDataMart.MCQQuestion question = getMCQQuestion(currentQuestionIndex);
+            var question = getMCQQuestion(/*currentQuestionIndex*/);
             int time = mainGame.StopTimer();
             int thinkingTime = question.time - time;
             int correctAnswer = question.answer;
 
-            bool unlockStatus = UnlockQuestion(currentQuestionIndex + 1);
+            UnlockQuestion(currentQuestionIndex + 1);
 
-
-            mainGame.SetSeasonText(QuestionDataMart.Instance.season.name,
-                unlockStatus ? recentlyUnlockedQuestionIndex : recentlyUnlockedQuestionIndex + 1,
-                playingPack.playingQuestions.Count);
+            //mainGame.SetSeasonText(QuestionDataMart.Instance.season.name,
+            //    unlockStatus ? recentlyUnlockedQuestionIndex : recentlyUnlockedQuestionIndex + 1,
+            //    playingPack.playingQuestions.Count);
 
             mainGame.ShowMCQAnswer(answer, correctAnswer);
-            //m_rMainGame.SetHintUiInteractable(false);
-            mainGame.SetHintPriceActive(false);
-            mainGame.SetUiNextButtonInteractable(currentQuestionIndex + 1 < playingPack.playingQuestions.Count &&
-                !IsQuestionLocked(currentQuestionIndex+1));
+            mainGame.LockNextButton(currentQuestionIndex + 1 < playingPack.playingQuestions.Count &&!IsQuestionLocked(currentQuestionIndex + 1));
 
 
             if (correctAnswer == answer)
             {
                 GameLogic.Instance.trackKeeper.TerminateQuestionData(playingPack.playingQuestions[currentQuestionIndex], 'c');
-                //playingPack.playingQuestions[m_currentQuestionIndex].status = 'c';
-                mainGame.ShowCorrectAnswer((currentQuestionIndex == playingPack.playingQuestions.Count - 1)?"   OK   ":
-                        AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
-                    PlayingDataMart.Instance.playingData.total_score, 
+
+                mainGame.ShowCorrectAnswerPopup(
+                    (currentQuestionIndex == playingPack.playingQuestions.Count - 1) ? AssetsDataMart.Instance.constantsSO.stringsSO.ok: AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
+                    PlayingDataMart.Instance.playingData.total_score,
                     GameLogic.Instance.hintManager.remainingScore);
 
-                PlayingDataMart.Instance.AddScore(getMCQQuestion(currentQuestionIndex).score);
+                PlayingDataMart.Instance.Score += getMCQQuestion(/*currentQuestionIndex*/).score;
 
-                Debug.Log("Dung roi ban ey : "+ thinkingTime+"s");
-                mainGame.PlayAudio(AssetsDataMart.Instance.constantsSO.correctAudioClip);
+                AudioController.Instance.PlayCorrectSound();
             }
             else
             {
+                GameLogic.Instance.hintManager.remainingScore = downloadedMCQQuestion.minus_score;
                 GameLogic.Instance.trackKeeper.TerminateQuestionData(playingPack.playingQuestions[currentQuestionIndex], 'w');
-                //playingPack.playingQuestions[m_currentQuestionIndex].status = 'w';
-                if (!isForcingEnding) {
-                    mainGame.ShowWrongAnswer(
-                        (currentQuestionIndex == playingPack.playingQuestions.Count - 1) ? "   OK   " : 
-                        AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
-                        AssetsDataMart.Instance.constantsSO.stringsSO.incorrect+"\n"+
-                        AssetsDataMart.Instance.constantsSO.stringsSO.the_answer_is+" " +(char)(65 + correctAnswer),
-                        PlayingDataMart.Instance.playingData.total_score
-                        );
+
+                if (!isForcingEnding)
+                {
+                    mainGame.ShowWrongMCQAnswer(
+                        (currentQuestionIndex == playingPack.playingQuestions.Count - 1) ? AssetsDataMart.Instance.constantsSO.stringsSO.ok: AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
+                        downloadedMCQQuestion.minus_score);
                 }
-                Debug.Log("Sai roi ban ey: " + thinkingTime + "s");
-                mainGame.PlayAudio(AssetsDataMart.Instance.constantsSO.wrongAudioClip);
+                AudioController.Instance.PlayWrongSound();
             }
         }
+
         public void MCQTimeout()
         {
             IsPlayingInMCQNow = false;
 
             bool unlockStatus = UnlockQuestion(currentQuestionIndex + 1);
-            int correctAnswer = getMCQQuestion(currentQuestionIndex).answer;
-            mainGame.ShowMCQAnswer(-1,correctAnswer);
-            mainGame.SetHintPriceActive(false);
+
+            int correctAnswer = getMCQQuestion(/*currentQuestionIndex*/).answer;
+
+            mainGame.ShowMCQAnswer(-1, correctAnswer);
+
             mainGame.SetSeasonText(QuestionDataMart.Instance.season.name,
                 unlockStatus ? recentlyUnlockedQuestionIndex : recentlyUnlockedQuestionIndex + 1,
                 playingPack.playingQuestions.Count);
 
+            GameLogic.Instance.hintManager.remainingScore = downloadedMCQQuestion.minus_score;
             GameLogic.Instance.trackKeeper.TerminateQuestionData(playingPack.playingQuestions[currentQuestionIndex], 'w');
 
-            mainGame.ShowWrongAnswer(
-                (currentQuestionIndex == playingPack.playingQuestions.Count - 1) ? "   OK   " : 
-                        AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
-                        AssetsDataMart.Instance.constantsSO.stringsSO.timeout + "\n"+
-                        AssetsDataMart.Instance.constantsSO.stringsSO.the_answer_is+" " +(char)(65 + correctAnswer),
-                       PlayingDataMart.Instance.playingData.total_score
-                );
+            mainGame.ShowWrongMCQAnswer(
+                (currentQuestionIndex == playingPack.playingQuestions.Count - 1) ? AssetsDataMart.Instance.constantsSO.stringsSO.ok: AssetsDataMart.Instance.constantsSO.stringsSO.next_question,
+                downloadedMCQQuestion.minus_score);
 
-            Debug.Log("Sai roi ban ey");
-                mainGame.PlayAudio(AssetsDataMart.Instance.constantsSO.wrongAudioClip);
+
+            AudioController.Instance.PlayWrongSound();
         }
+
+        private void RevealAnswerByWatchingVideo()
+        {
+            GameLogic.Instance.hintManager.remainingScore = -150;
+            mainGame.ShowAnswerPopup(downloadedTypedQuestion.FirstAnswer);
+            EndTypedQuestion(false);
+        }
+
         public void NextQuestionAfterAnswering()
         {
-            mainGame.HideAnswerResultPopupPanel();
             if (Mode == Modes.TYPING_ANSWER)
             {
                 if (IsQuestionAnsweredCorrectly(currentQuestionIndex))
                 {
-                    mainGame.SetPrevAnswer(getTypedQuestion(currentQuestionIndex).answer);
+                    //mainGame.SetPrevAnswer(getTypedQuestion(/*currentQuestionIndex*/).FirstAnswer);
                     NextQuestion();
                 }
             }
@@ -470,49 +422,12 @@ namespace Assets.Scripts.GameScene
             }
             Debug.Log("Next it babe");
         }
-        public void BuyHint()
-        {
-            QuestionDataMart.Question question = getQuestion(currentQuestionIndex);
-            PlayingDataMart.QuestionPlayingData playingQuestion = playingPack.playingQuestions[currentQuestionIndex];
-            if (IsQuestionActive(currentQuestionIndex))
-            {
-                if (playingQuestion.used_hint_count < question.hints.Count && PlayingDataMart.Instance.m_score > 0)
-                {
-                    int subtractingScore = GameLogic.Instance.hintManager.GetHintPrice(playingQuestion.used_hint_count);
-                    int nextScore = GameLogic.Instance.hintManager.GetHintPrice(playingQuestion.used_hint_count + 1);
 
-                    PlayingDataMart.Instance.SubtractScore(subtractingScore);
-                    GameLogic.Instance.hintManager.SubtractRemainingScoreOfQuestion(subtractingScore);
-                    GameLogic.Instance.trackKeeper.ChangeUsedHintCount(playingQuestion, playingQuestion.used_hint_count + 1);
-                    //playingQuestion.used_hint_count++;
-                    if (playingQuestion.used_hint_count < question.hints.Count)
-                        mainGame.SetHintPrice(nextScore);
-                    else
-                        mainGame.SetHintPriceActive(false);
-                    Debug.Log("Hint count " + playingQuestion.used_hint_count +" "+ question.hints.Count);
-                }
-                else
-                {
-                    //no hints left or not enough money.
-                }
-                string hints = "";
-                for (int i = 0; i < playingQuestion.used_hint_count; i++)
-                    hints += (i+1) + ". " + question.hints[i] + (i < playingQuestion.used_hint_count - 1 ? "\n" : "");
-                mainGame.ShowHintPanel(hints);
-            }
-            else
-            {
-                string hints = "";
-                for(int i = 0; i< question.hints.Count;i++)
-                    hints += i + ". " + question.hints[i] + (i < question.hints.Count-1 ? "\n" : "");
-                mainGame.ShowHintPanel(hints);
-            }
-        }
         public bool UnlockQuestion(int unlockIndex, int howMany = 1)
         {
             if (unlockIndex > recentlyUnlockedQuestionIndex)
             {
-                if(unlockIndex < playingPack.playingQuestions.Count)
+                if (unlockIndex < playingPack.playingQuestions.Count)
                 {
                     recentlyUnlockedQuestionIndex = unlockIndex;
                     for (int i = 0; i < howMany; i++)
@@ -525,39 +440,30 @@ namespace Assets.Scripts.GameScene
                     }
                     return true;
                 }
-                else if(unlockIndex == playingPack.playingQuestions.Count) {
+                else if (unlockIndex == playingPack.playingQuestions.Count)
+                {
                     //this pack is finished
                     recentlyUnlockedQuestionIndex = playingPack.playingQuestions.Count;
                 }
             }
             return false;
         }
-        public void OnScoreChanged(bool increased)
-        {
-            mainGame.SetScore(PlayingDataMart.Instance.m_score);
-            if (increased)
-            {
-                //display some cool effect here
-            }
-            else
-            {
-                //display some sad effect here..
-            }
-        }
+
 
         public void MCQForceEnding()
         {
-            VerifyMCQAnswer(-1,true);
+            VerifyMCQAnswer(-1, true);
         }
 
         public void SaveImageOfTheCurrentQuestion(int index)
         {
-            QuestionDataMart.Question question = getQuestion(currentQuestionIndex);
+            var question = getQuestion();
             LocalProvider.Instance.SaveImage(question.images[index].sprite.texture,
-                Path.GetFileName(question.images[0].path), (status) => {
-                if (status)
+                Path.GetFileName(question.images[0].path), (status) =>
                 {
-                    Debug.Log("saved image bro...");
+                    if (status)
+                    {
+                        Debug.Log("saved image bro...");
                         mainGame.ShowSaveFeedback();
                     }
                     else
@@ -566,71 +472,31 @@ namespace Assets.Scripts.GameScene
                     }
                 });
         }
-        public bool IsLastQuestion()
-        {
-            return (currentQuestionIndex == playingPack.playingQuestions.Count - 1);
-        }
-        public bool IsInMCQMode()
-        {
-            return Mode == Modes.MCQ;
-        }
-        public string GetCurrentQuestionPackName()
-        {
-            return pack.title;
-        }
 
-        private QuestionDataMart.Question getQuestion(int index)
+        public bool IsLastQuestion=> (currentQuestionIndex == playingPack.playingQuestions.Count - 1);
+        public bool IsInMCQMode=>Mode == Modes.MCQ;
+
+        public string GetCurrentQuestionPackName => pack.title;
+
+        private QuestionDataMart.Question getQuestion()
         {
-            //if (m_mode == Modes.TYPING_ANSWER)
-            //    return pack.typed_questions[index];
-            //else if (m_mode == Modes.MCQ)
-            //    return pack.mcq_questions[index];
             if (Mode == Modes.TYPING_ANSWER)
                 return downloadedTypedQuestion;
             else if (Mode == Modes.MCQ)
                 return downloadedMCQQuestion;
 
-            //Download Question
-            //int questionId = pack.questions[index].id;
-            //HttpClient.Instance.GetQuestionById(questionId, (questionWrapper) =>
-            //{
-            //    if (questionWrapper.type == 0)
-            //    {
-            //        HttpClient.TypedQuestion q = questionWrapper.typed_question;
-            //        QuestionDataMart.TypedQuestion typedQuestion = new QuestionDataMart.TypedQuestion()
-            //        {
-            //            id = q.id,
-            //            question = q.question,
-            //            answer = q.answer,
-            //            score = q.score,
-            //            hints = Utils.Instance.FromJsonList<List<string>>(q.hints),
-            //            images = new List<QuestionDataMart.Image>()
-            //        };
-            //    }
-            //});
             return null;
         }
 
-        private QuestionDataMart.TypedQuestion getTypedQuestion(int index)
+        private QuestionDataMart.TypedQuestion getTypedQuestion(/*int index*/)
         {
-            //Download Question
-            //int questionId = pack.questions[index].id;
             return downloadedTypedQuestion;
         }
-        private QuestionDataMart.MCQQuestion getMCQQuestion(int index)
+        private QuestionDataMart.MCQQuestion getMCQQuestion(/*int index*/)
         {
-            //Download Question
-            //int questionId = pack.questions[index].id;
             return downloadedMCQQuestion;
         }
-        private int getQuestionPackCount()
-        {
-            //if (m_mode == Modes.TYPING_ANSWER)
-            //    return pack.typed_questions.Count;
-            //else if (m_mode == Modes.MCQ)
-            //    return pack.mcq_questions.Count;
-            return pack.questions.Count;
-        }
+        private int getQuestionPackCount => pack.questions.Count;
 
 
 
@@ -667,5 +533,89 @@ namespace Assets.Scripts.GameScene
                 item.SetState(playingPack.playingQuestions[index].status);
             });
         }
+
     }
 }
+//int usedHintCount = playingPack.playingQuestions[currentQuestionIndex].used_hint_count;
+
+//if (question.hints.Count > 0 && PlayingDataMart.Instance.m_score > 0)
+//{
+//    mainGame.SetHintUiInteractable(true);
+//    if (IsQuestionActive(currentQuestionIndex) && usedHintCount < question.hints.Count)
+//    {
+//        mainGame.SetHintPriceActive(true);
+//        mainGame.SetHintPrice(GameLogic.Instance.hintManager.GetHintPrice(usedHintCount));
+//    }
+//    else
+//    {
+//        mainGame.SetHintPriceActive(false);
+//    }
+//    Debug.Log("OpenQuestion: Enough money");
+//}
+//else
+//{
+//    Debug.Log("OpenQuestion: Not enough money: your money = " + PlayingDataMart.Instance.m_score + ", hints count = " + question.hints.Count);
+//    if (!IsQuestionActive(currentQuestionIndex))
+//        mainGame.SetHintUiInteractable(true);
+//    else
+//    {
+//        if (usedHintCount > 0)
+//            mainGame.SetHintUiInteractable(true);
+//        else
+//            mainGame.SetHintUiInteractable(false);
+//    }
+//}
+
+
+
+
+
+
+//public void BuyHint()
+//{
+//    QuestionDataMart.Question question = getQuestion(currentQuestionIndex);
+//    PlayingDataMart.QuestionPlayingData playingQuestion = playingPack.playingQuestions[currentQuestionIndex];
+//    if (IsQuestionActive(currentQuestionIndex))
+//    {
+//        if (playingQuestion.used_hint_count < question.hints.Count && PlayingDataMart.Instance.m_score > 0)
+//        {
+//            int subtractingScore = GameLogic.Instance.hintManager.GetHintPrice(playingQuestion.used_hint_count);
+//            int nextScore = GameLogic.Instance.hintManager.GetHintPrice(playingQuestion.used_hint_count + 1);
+
+//            PlayingDataMart.Instance.SubtractScore(subtractingScore);
+//            GameLogic.Instance.hintManager.SubtractRemainingScoreOfQuestion(subtractingScore);
+//            GameLogic.Instance.trackKeeper.ChangeUsedHintCount(playingQuestion, playingQuestion.used_hint_count + 1);
+//            //playingQuestion.used_hint_count++;
+//            if (playingQuestion.used_hint_count < question.hints.Count)
+//                mainGame.SetHintPrice(nextScore);
+//            else
+//                mainGame.SetHintPriceActive(false);
+//            Debug.Log("Hint count " + playingQuestion.used_hint_count +" "+ question.hints.Count);
+//        }
+//        else
+//        {
+//            //no hints left or not enough money.
+//        }
+//        string hints = "";
+//        for (int i = 0; i < playingQuestion.used_hint_count; i++)
+//            hints += (i+1) + ". " + question.hints[i] + (i < playingQuestion.used_hint_count - 1 ? "\n" : "");
+//        mainGame.ShowHintPanel(hints);
+//    }
+//    else
+//    {
+//        string hints = "";
+//        for(int i = 0; i< question.hints.Count;i++)
+//            hints += i + ". " + question.hints[i] + (i < question.hints.Count-1 ? "\n" : "");
+//        mainGame.ShowHintPanel(hints);
+//    }
+//}
+
+//if (m_mode == Modes.TYPING_ANSWER)
+//    return pack.typed_questions[index];
+//else if (m_mode == Modes.MCQ)
+//    return pack.mcq_questions[index];
+
+//if (m_mode == Modes.TYPING_ANSWER)
+//    return pack.typed_questions.Count;
+//else if (m_mode == Modes.MCQ)
+//    return pack.mcq_questions.Count;

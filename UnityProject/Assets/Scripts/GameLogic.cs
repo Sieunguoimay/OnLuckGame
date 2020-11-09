@@ -7,15 +7,9 @@ using UnityEngine;
 using Assets.Scripts.DataMarts;
 namespace Assets.Scripts
 {
-    public class GameLogic
+    public class GameLogic:MonoBehaviourSingleton<GameLogic>
     {
-        /*This class is a Singleton*/
-        private static GameLogic s_instance = null;
-        public static GameLogic Instance
-            {get{if (s_instance == null)s_instance = new GameLogic();return s_instance;}}
-        private GameLogic() { }
-        /*End of Singleton Declaration*/
-
+        
         [Serializable]
         public class PlayingData
         {
@@ -69,12 +63,11 @@ namespace Assets.Scripts
 
                     Debug.Log("playingQuestion.ended " + playingQuestion.ended);
 
-                    if(status == 'c'|| !isTypingQuestion)
-                        HttpClient.Instance.SubmitQuestionPlayingData(playingQuestion, (response) =>
-                        {
-                            PlayingDataMart.Instance.playingData.uptodate_token = response.playing_data_uptodate_token;
-                            PlayingDataMart.Instance.playingData.total_score = response.score;
-                        });
+                    HttpClient.Instance.SubmitQuestionPlayingData(playingQuestion, (response) =>
+                    {
+                        PlayingDataMart.Instance.playingData.uptodate_token = response.playing_data_uptodate_token;
+                        PlayingDataMart.Instance.Score = response.score;
+                    });
                 }
             }
             public bool UnlockQuestionData(PlayingDataMart.QuestionPlayingData playingQuestion)
@@ -103,10 +96,12 @@ namespace Assets.Scripts
         {
             Debug.Log("Output pack_index="+ packIndex + "question_index=" + questionIndex);
 
-            if (!trackKeeper.dirtyFlag) return;
-
+            if (!trackKeeper.dirtyFlag)
+            {
+                return;
+            }
             //playingPacks[pack].currentIndex = currentIndex;
-            PlayingDataMart.Pack pack = PlayingDataMart.Instance.playingPacks[packIndex];
+            var pack = PlayingDataMart.Instance.playingPacks[packIndex];
             pack.currentIndex = questionIndex;
 
             //PlayingData playingData = new PlayingData

@@ -8,22 +8,16 @@ using UnityEngine;
 using Assets.Scripts;
 namespace Assets.Scripts.DataMarts
 {
-    public class QuestionDataMart
+    public interface ILoadQuestionListener
+    {
+        void OnLoadQuestionFailed();
+        void OnLoadQuestionResult(QuestionDataMart.TypedQuestion typedQuestion, QuestionDataMart.MCQQuestion mcqQuestion);
+        void OnLoadImageResult(QuestionDataMart.Image image);
+    }
+
+    public class QuestionDataMart:MonoBehaviourSingleton<QuestionDataMart>
     {
 
-        /*This class is a Singleton*/
-        private static QuestionDataMart s_instance = null;
-        public static QuestionDataMart Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                    s_instance = new QuestionDataMart();
-                return s_instance;
-            }
-        }
-        private QuestionDataMart() { }
-        /*End of Singleton Declaration*/
 
         [System.Serializable]
         public class Season
@@ -65,26 +59,44 @@ namespace Assets.Scripts.DataMarts
         [Serializable]
         public class TypedQuestion : Question
         {
-            public string answer;
+            public List<string> answers;
+
+            public bool CheckAnswer(string answer)
+            {
+                answer = Utils.Instance.convertToUnSign3(answer.ToLower());
+
+                foreach (var a in answers)
+                {
+                    var _a = Utils.Instance.convertToUnSign3(a.ToLower());
+
+                    if (_a.Equals(answer))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            public string FirstAnswer
+            {
+                get
+                {
+                    if (answers.Count > 0)
+                    {
+                        return answers[0];
+                    }
+                    return "";
+                }
+            }
         }
         [Serializable]
         public class MCQQuestion : Question
         {
             public int answer;
             public int time;
+            public int minus_score;
             public string[] choices;
         }
-        //[Serializable]
-        //public class Pack
-        //{
-        //    public int id;
-        //    public string title;
-        //    public string sub_text;
-        //    public Image icon;
-        //    public List<TypedQuestion> typed_questions;
-        //    public List<MCQQuestion> mcq_questions;
-        //    public int question_type;
-        //}
+
         [Serializable]
         public class Pack
         {
@@ -111,15 +123,16 @@ namespace Assets.Scripts.DataMarts
 
         public Season season { get; private set; } = new Season();
 
-        public delegate void GameDataReadyCallback();
-        public delegate void AskForPermissionCallback();
-        public GameDataReadyCallback m_gameDataReadyCallback = null;
-        public GameDataReadyCallback m_gameDataCompletedCallback = null;
-        public AskForPermissionCallback m_askForPermissionCallback = null;
+        public Action m_gameDataReadyCallback = delegate { };
+        public Action m_gameDataCompletedCallback = delegate { };
+        public Action m_askForPermissionCallback = delegate { };
+        public Action<string, string, float ,float> progressCallback = null;
 
         public OnluckLocalMetadata onluckLocalMetadata = null;
         public ProgressBar.ProgressPublisher progressPublisher;
         private int activationCode = 0;
+
+        public ILoadQuestionListener QuestionLoadListener = null;
 
         public void Init()
         {
@@ -131,7 +144,9 @@ namespace Assets.Scripts.DataMarts
         public bool LoadMetadata()
         {
             progressPublisher.publishProgress(0.1f);
-            OnluckLocalMetadata metadata = LocalProvider.Instance.LoadOnluckLocalMetadata();
+
+            var metadata = LocalProvider.Instance.LoadOnluckLocalMetadata();
+
             if (metadata != null)
             {
                 Debug.Log("Loaded local onluck metadata " + metadata.activation_code);
@@ -142,13 +157,6 @@ namespace Assets.Scripts.DataMarts
             }
             onluckLocalMetadata = new OnluckLocalMetadata();
             return false;
-            //LocalProvider.Instance.LoadQuestionData((loadedPacks) =>
-            //{
-            //    packs = loadedPacks;
-
-            //    Debug.Log("Loaded Question Data " + packs.Count);
-            //    m_gameDataReadyCallback();
-            //});
         }
 
         public void SetFromServerOnluckMetadata(MonoBehaviour context,HttpClient.OnluckMetadata metadata)
@@ -174,8 +182,8 @@ namespace Assets.Scripts.DataMarts
 
                         Debug.Log("Loaded Question Data " + packs.Count);
                         progressPublisher.publishProgress(1.0f);
-                        m_gameDataReadyCallback();
-                        m_gameDataCompletedCallback();
+                        m_gameDataReadyCallback?.Invoke();
+                        m_gameDataCompletedCallback?.Invoke();
                     }
                 });
             }
@@ -184,7 +192,7 @@ namespace Assets.Scripts.DataMarts
                 activationCode = metadata.activation_code;
                 Debug.Log("You need to download this new data. otherwise, no game");
                 //ask menu presenter for permission
-                m_askForPermissionCallback();
+                m_askForPermissionCallback?.Invoke();
             }
 
         }
@@ -194,20 +202,21 @@ namespace Assets.Scripts.DataMarts
             m_gameDataCompletedCallback();
             progressPublisher.publishProgress(1.0f);
 
-            GameObject gameDataDownloader = new GameObject("GameDataDownloader",typeof(GameDataDownloader));
+            var gameDataDownloader = new GameObject("GameDataDownloader",typeof(GameDataDownloader));
+            gameDataDownloader.transform.parent = transform;
 
             LocalProvider.Instance.ClearQuestionData();
-            gameDataDownloader.GetComponent<GameDataDownloader>().progressCallback = MenuPresenter.Instance.DisplayDownloadProgress;
+            gameDataDownloader.GetComponent<GameDataDownloader>().progressCallback = progressCallback;// MenuPresenter.Instance.DisplayDownloadProgress;
             gameDataDownloader.GetComponent<GameDataDownloader>().onDoneCallback = (ss) => {
                 onluckLocalMetadata.activation_code = activationCode;
                 onluckLocalMetadata.season_name = ss.name;
                 season = ss;
                 packs = season.packs;
-                m_gameDataReadyCallback();
+                m_gameDataReadyCallback?.Invoke();
                 //LocalProvider.Instance.SaveQuestionData(season);
                 LocalProvider.Instance.SaveOnluckLocalMetadata(onluckLocalMetadata);
+
                 GameObject.Destroy(gameDataDownloader);
-                
             };
 
             //HttpClient.Instance.DownloadGameData((ss) => {
@@ -226,5 +235,148 @@ namespace Assets.Scripts.DataMarts
             //    LocalProvider.Instance.SaveOnluckLocalMetadata(onluckLocalMetadata);
             //});
         }
+
+        public void LoadQuestion(int id, int type)
+        {
+            HttpClient.Instance.GetQuestionById(id,type, (questionWrapper) =>
+            {
+                bool success = false;
+
+                TypedQuestion downloadedTypedQuestion = null;
+                MCQQuestion downloadedMCQQuestion = null;
+
+                if (questionWrapper != null)
+                {
+                    if (questionWrapper.type == 0)
+                    {
+                        var q = questionWrapper.typed_question;
+                        if (q != null)
+                        {
+                            downloadedTypedQuestion = new QuestionDataMart.TypedQuestion()
+                            {
+                                id = q.id,
+                                question = q.question,
+                                answers = ParseStringToList(q.answers),
+                                score = q.score,
+                                images = new List<QuestionDataMart.Image>(),
+                                hints = ParseStringToList(q.hints)
+                            };
+
+                            LoadImages(q.images, downloadedTypedQuestion.images);
+
+                            success = true;
+                        }
+                    }
+                    else
+                    {
+                        var q = questionWrapper.mcq_question;
+                        if (q != null)
+                        {
+                            downloadedMCQQuestion = new QuestionDataMart.MCQQuestion()
+                            {
+                                id = q.id,
+                                question = q.question,
+                                choices = Utils.Instance.FromJsonList<List<string>>(q.choices).ToArray(),
+                                answer = q.answer,
+                                time = q.time,
+                                score = q.score,
+                                minus_score = q.minus_score,
+                                images = new List<QuestionDataMart.Image>(),
+                                hints = ParseStringToList(q.hints)
+                            };
+
+                            LoadImages(q.images, downloadedMCQQuestion.images);
+
+                            success = true;
+                        }
+                    }
+                }
+
+                if (success)
+                {
+                    //openQuestion(index);
+                    QuestionLoadListener?.OnLoadQuestionResult(downloadedTypedQuestion,downloadedMCQQuestion);
+                }
+                else
+                {
+                    //mainGame.EnableUIOnLoadQuestionFailed();
+                    QuestionLoadListener?.OnLoadQuestionFailed();
+                }
+            });
+        }
+
+        private void LoadImages(string str, List<Image> imageList)
+        {
+            if (!str.Equals(""))
+            {
+                var images = Utils.Instance.FromJsonList<List<string>>(str);
+
+                foreach (string img in images)
+                {
+                    var image = new QuestionDataMart.Image() { path = img };
+
+                    imageList.Add(image);
+
+                    Utils.Instance.LoadImage(HttpClient.Instance.BaseUrl + img, (texture) =>
+                    {
+                        Debug.Log("Downloaded " + img);
+
+                        image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+
+                        QuestionLoadListener?.OnLoadImageResult(image);
+                        //mainGame.UiImageSlideshow.SetQuestionImages(downloadedTypedQuestion.images);
+                    });
+                }
+            }
+            else
+            {
+                //mainGame.UiImageSlideshow.SetToDefault();
+                QuestionLoadListener?.OnLoadImageResult(null);
+            }
+
+        }
+        private List<string> ParseStringToList(string str)
+        {
+            
+            //return str.Split(';').ToList<string>();
+
+            var hintList = new List<string>();
+
+            if (!str.Equals(""))
+            {
+                var hints = Utils.Instance.FromJsonList<List<string>>(str);
+
+                foreach (string hint in hints)
+                {
+                    hintList.Add(hint);
+                }
+            }
+            return hintList;
+        }
     }
 }
+//                            if (!q.images.Equals(""))
+//                            {
+//                                var images = Utils.Instance.FromJsonList<List<string>>(q.images);
+
+//                                foreach (string img in images)
+//                                {
+//                                    var image = new QuestionDataMart.Image() { path = img };
+
+//downloadedMCQQuestion.images.Add(image);
+
+//                                    Utils.Instance.LoadImage(HttpClient.Instance.BaseUrl + img, (texture) =>
+//                                    {
+//                                        Debug.Log("Downloaded " + img);
+
+//                                        image.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
+
+//                                        mainGame.UiImageSlideshow.SetQuestionImages(downloadedMCQQuestion.images);
+//                                    });
+//                                }
+//                            }
+//                            else
+//                            {
+//                                mainGame.UiImageSlideshow.SetToDefault();
+//                            }
+

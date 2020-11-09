@@ -7,9 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeGallery.Runtime", "Na
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeShare.Runtime", "NativeShare.Runtime.csproj", "{37C859EA-3CA4-FE01-BD7A-761D909A9022}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleMobileAds", "GoogleMobileAds.csproj", "{BC42A721-003A-1CE6-033D-290D042692FD}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeGallery.Editor", "NativeGallery.Editor.csproj", "{DE27783F-7DCA-82A6-6FD9-AFBEA43D9996}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NativeShare.Editor", "NativeShare.Editor.csproj", "{8DDC6E31-51A4-E8D0-DCA6-DEC7C2BD5398}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleMobileAds.Editor", "GoogleMobileAds.Editor.csproj", "{A303D571-2B38-F5C9-086F-51D5ECD790DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,10 @@ Global
 		{37C859EA-3CA4-FE01-BD7A-761D909A9022}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37C859EA-3CA4-FE01-BD7A-761D909A9022}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37C859EA-3CA4-FE01-BD7A-761D909A9022}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC42A721-003A-1CE6-033D-290D042692FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC42A721-003A-1CE6-033D-290D042692FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC42A721-003A-1CE6-033D-290D042692FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC42A721-003A-1CE6-033D-290D042692FD}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DE27783F-7DCA-82A6-6FD9-AFBEA43D9996}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DE27783F-7DCA-82A6-6FD9-AFBEA43D9996}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE27783F-7DCA-82A6-6FD9-AFBEA43D9996}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -37,6 +45,10 @@ Global
 		{8DDC6E31-51A4-E8D0-DCA6-DEC7C2BD5398}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DDC6E31-51A4-E8D0-DCA6-DEC7C2BD5398}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DDC6E31-51A4-E8D0-DCA6-DEC7C2BD5398}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A303D571-2B38-F5C9-086F-51D5ECD790DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A303D571-2B38-F5C9-086F-51D5ECD790DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A303D571-2B38-F5C9-086F-51D5ECD790DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A303D571-2B38-F5C9-086F-51D5ECD790DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -22,17 +22,17 @@ public class LoginLogic
     private LoginLogic() { }
     /*End of Singleton Declaration*/
 
-    public Action<bool> fbLoginCallback = null;
-    public Action<bool> fbLoginDoneCallback = null;
-    public HttpClient.LoadDataFromServerCallback userDataFromServerCallback = null;
-    public HttpClient.HttpClientResponseCallback<UserDataMart.UserData> checkForUptodateUserDataCallback = null;
-    public LocalProvider.LoadLocalDataCallback<UserDataMart.UserData> loadLocalUserDataCallback = null;
-    public HttpClient.HttpClientResponseCallback<int> fbSignInCallback = null;
+    public Action<bool> fbLoginCallback = delegate { };
+    public Action fbLoginDoneCallback = delegate { };
+    public Action<UserDataMart.UserData> OnUserDataFromServer = delegate { };
+    public Action<HttpClient.Response<UserDataMart.UserData>> checkForUptodateUserDataCallback = delegate { };
+    public Action<UserDataMart.UserData> loadLocalUserDataCallback = delegate { };
+    public Action<int> fbSignInCallback = delegate { };
 
     public void Init()
     {
 
-        userDataFromServerCallback = (newUserData) =>
+        OnUserDataFromServer = (newUserData) =>
         {
             UserDataMart.Instance.SetUserData(newUserData);
             UserDataMart.Instance.NotifyNewData();
@@ -60,14 +60,14 @@ public class LoginLogic
                 //HttpClient.Instance.LoadUserDataFromServer(
                 //    UserDataMart.Instance.m_userData.id,
                 //    userDataFromServerCallback);
-                userDataFromServerCallback(response.data);
+                OnUserDataFromServer(response.data);
             }
         };
 
 
         fbLoginCallback = (status) =>
         {
-            UserDataMart.UserData fbUserData = new UserDataMart.UserData();
+            var fbUserData = new UserDataMart.UserData();
             if (status)
             {
                 FBLogin.Instance.FetchFBUserInfo((userInfo) =>
@@ -76,27 +76,36 @@ public class LoginLogic
                     fbUserData.email = userInfo.email;
 
                     Debug.Log("Logged in with facebook, let's load profile picture from local");
+
                     FBLogin.Instance.FetchFBProfilePicture((texture) =>
                     {
                         fbUserData.texProfilePicture = texture;
+
                         Debug.Log("Profilepicture is ok now, let's signin to the server");
+
                         HttpClient.Instance.SignIn(
-                            fbUserData.name, fbUserData.email,
-                            fbUserData.texProfilePicture.EncodeToPNG(), (response) =>
+                            fbUserData.name, fbUserData.email, userInfo.id,
+                            /*fbUserData.texProfilePicture.EncodeToPNG(), */(response) =>
                             {
                                 if (response.status.Equals("OK"))
                                 {
                                     fbUserData.id = response.data.user_id;
-                                    fbUserData.profile_picture = response.data.profile_picture;
+                                    fbUserData.profile_picture = "profile_picture_"+fbUserData.email+".png";// response.data.profile_picture;
                                     fbUserData.uptodate_token = response.data.uptodate_token;
+                                    fbUserData.name = response.data.name;
+                                    fbUserData.phone = response.data.phone;
+                                    fbUserData.address = response.data.address;
                                     fbUserData.active_vendor = "facebook";
-                                    Debug.Log("Signed in with facebook. got the user_id, let's save the user data to local device");
+
                                     UserDataMart.Instance.SetUserData(fbUserData);
+
                                     UserDataMart.Instance.NotifyDataFromServerValid();
-                                    LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,true);
+                                    //LocalProvider.Instance.SaveUserData(UserDataMart.Instance.m_userData,true);
                                     Main.Instance.PreparePlayingDataOnUserDataFromServerReady(response.data.playing_data_uptodate_token);
-                                    if(fbLoginDoneCallback!=null)
-                                        fbLoginDoneCallback(true);
+
+                                    fbLoginDoneCallback?.Invoke();
+
+                                    Debug.Log("Signed in with facebook. got the user_id, let's save the user data to local device");
                                 }
                                 else
                                 {

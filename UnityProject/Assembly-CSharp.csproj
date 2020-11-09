@@ -55,7 +55,9 @@
     <Analyzer Include="C:\Program Files (x86)\Microsoft Visual Studio Tools for Unity\16.0\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\UI\Splash\SplashUI.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Deflater.cs" />
+    <Compile Include="Assets\Scripts\UI\Spinner.cs" />
     <Compile Include="Assets\Scripts\HttpClient.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarException.cs" />
     <Compile Include="Assets\Scripts\GameScene\MCQAnswerItem.cs" />
@@ -65,6 +67,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarOutputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterEngine.cs" />
     <Compile Include="Assets\Scripts\GameScene\PopupManager.cs" />
+    <Compile Include="Assets\Scripts\Controllers\AudioController.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Streams\OutputWindow.cs" />
     <Compile Include="Assets\Scripts\GameScene\QuestionItem.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Streams\DeflaterOutputStream.cs" />
@@ -110,6 +113,7 @@
     <Compile Include="Assets\StandaloneFileBrowser\IStandaloneFileBrowser.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\INameTransform.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\GZip\GZipException.cs" />
+    <Compile Include="Assets\Scripts\UI\MainGame\HintPanel.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\BZip2\BZip2Exception.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarHeader.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipException.cs" />
@@ -123,6 +127,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\PendingBuffer.cs" />
     <Compile Include="Assets\Scripts\Main.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\IScanFilter.cs" />
+    <Compile Include="Assets\Scripts\Controllers\AdsManagement.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\GZip\GZip.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipEntryFactory.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\Exceptions\StreamUnsupportedException.cs" />
@@ -138,6 +143,7 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\BZip2\BZip2OutputStream.cs" />
     <Compile Include="Assets\Scripts\GameDataDownloader.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\DeflaterHuffman.cs" />
+    <Compile Include="Assets\Scripts\UI\OpenKeyboardOnPointerClickSupport.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\Exceptions\UnexpectedEndOfStreamException.cs" />
     <Compile Include="Assets\Scripts\MainGame.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Lzw\LzwConstants.cs" />
@@ -146,18 +152,22 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarInputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipFile.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Checksum\BZip2Crc.cs" />
+    <Compile Include="Assets\Scripts\UI\UserProfile.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\Exceptions\StreamDecodingException.cs" />
+    <Compile Include="Assets\Scripts\UI\Scoreboard.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserMac.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Encryption\ZipAESTransform.cs" />
     <Compile Include="Assets\Scripts\GameScene\ImageSlideshow.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Tar\TarBuffer.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Checksum\IChecksum.cs" />
     <Compile Include="Assets\StandaloneFileBrowser\StandaloneFileBrowserEditor.cs" />
+    <Compile Include="Assets\Scripts\UI\UserInfoBar.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\Compression\Streams\InflaterInputStream.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipHelperStream.cs" />
     <Compile Include="Assets\Scripts\MenuScene\QuestionPackItem.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Lzw\LzwException.cs" />
     <Compile Include="Assets\Scripts\DataMarts\AssetsDataMart.cs" />
+    <Compile Include="Assets\Scripts\UI\MainGame\UtilityButtons.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Encryption\PkzipClassic.cs" />
     <Compile Include="Assets\Scripts\ScrollList.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipInputStream.cs" />
@@ -170,7 +180,6 @@
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\WindowsNameTransform.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Zip\ZipEncryptionMethod.cs" />
     <Compile Include="Assets\ICSharpCode.SharpZipLib\Core\InvalidNameException.cs" />
-    <Compile Include="Assets\Scripts\UI\UserProfile.cs" />
   </ItemGroup>
   <ItemGroup>
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro.cginc" />
@@ -191,7 +200,6 @@
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Properties.cginc" />
      <None Include="Assets\FacebookSDK\Plugins\Gameroom\Facebook.Unity.Gameroom.dll" />
      <None Include="Assets\TextMesh Pro\Resources\Shaders\TMPro_Surface.cginc" />
-     <None Include="Assets\Materials\Gradient.shader" />
      <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
      <None Include="Assets\FacebookSDK\Plugins\Android\Facebook.Unity.Android.dll" />
      <None Include="Assets\iOS Project Builder\Setup Howto.txt" />
@@ -779,6 +787,9 @@
     <Reference Include="UnityEditor.UI">
       <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
     </Reference>
+    <Reference Include="Unity.2D.Sprite.Editor">
+      <HintPath>Library\ScriptAssemblies\Unity.2D.Sprite.Editor.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="NativeShare.Editor.csproj">
@@ -796,6 +807,14 @@
     <ProjectReference Include="NativeGallery.Runtime.csproj">
       <Project>{373C8609-0D13-581E-FA2E-CB187E092694}</Project>
       <Name>NativeGallery.Runtime</Name>
+    </ProjectReference>
+    <ProjectReference Include="GoogleMobileAds.csproj">
+      <Project>{BC42A721-003A-1CE6-033D-290D042692FD}</Project>
+      <Name>GoogleMobileAds</Name>
+    </ProjectReference>
+    <ProjectReference Include="GoogleMobileAds.Editor.csproj">
+      <Project>{A303D571-2B38-F5C9-086F-51D5ECD790DA}</Project>
+      <Name>GoogleMobileAds.Editor</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

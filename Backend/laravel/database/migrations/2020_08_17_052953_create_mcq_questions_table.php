@@ -20,7 +20,8 @@ class CreateMcqQuestionsTable extends Migration
             $table->string("choices");
             $table->integer("answer");
             $table->integer("time");
-            $table->integer("score")->default(0);
+            $table->smallInteger("score")->default(0);
+            $table->smallInteger("minus_score")->default(-15);
             $table->string("images");
             $table->string("hints");
             $table->timestamps();

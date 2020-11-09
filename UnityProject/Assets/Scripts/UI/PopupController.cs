@@ -5,11 +5,11 @@ using UnityEngine.UI;
 
 public class PopupController : MonoBehaviour
 {
-    [SerializeField] private GameObject UserProfile;
-    [SerializeField] private GameObject Scoreboard;
+    public UserProfile UserProfile;
+    [SerializeField] private Scoreboard Scoreboard;
     [SerializeField] private GameObject Guideline;
     [SerializeField] private Text TextGuideline;
-    [SerializeField] private ScrollList ScoreboardScrollList;
+    [SerializeField] private Text TextTitle;
     [SerializeField] private Animator animator;
 
     private int hashCode_Show;
@@ -19,47 +19,66 @@ public class PopupController : MonoBehaviour
     {
         hashCode_Show = Animator.StringToHash("show");
         hashCode_Hide = Animator.StringToHash("hide");
+
+        UserProfile.LogoutButtonClicked += Hide;
+
     }
 
-    public void ShowGuideline(string content)
+    public void ShowUserProfile()
     {
+        gameObject.SetActive(true);
+        animator.SetTrigger(hashCode_Show);
+
+        UserProfile.gameObject.SetActive(true);
+        Scoreboard.gameObject.SetActive(false);
+        Guideline.SetActive(false);
+
+        UserProfile.Refresh();
+    }
+
+    public void ShowGuideline(string title,string content)
+    {
+        TextTitle.text = title;
         TextGuideline.text = content;
 
         gameObject.SetActive(true);
-        UserProfile.SetActive(false);
-        Scoreboard.SetActive(false);
+        animator.SetTrigger(hashCode_Show);
+
+        UserProfile.gameObject.SetActive(false);
+        Scoreboard.gameObject.SetActive(false);
         Guideline.SetActive(true);
     }
 
     public void ShowScoreboard()
     {
         gameObject.SetActive(true);
-        UserProfile.SetActive(false);
-        Scoreboard.SetActive(true);
+        animator.SetTrigger(hashCode_Show);
+
+        UserProfile.gameObject.SetActive(false);
+        Scoreboard.gameObject.SetActive(true);
         Guideline.SetActive(false);
+
+        Scoreboard.Show();
     }
 
-
-    public void AddScoreboardItem(int index, string name, string profilePic, int score)
-    {
-        var item = ScoreboardScrollList.CreateItem<ScoreboardItem>();
-
-        item.SetRank(index);
-        item.SetUserName(name);
-        item.SetScore(score);
-        item.SetProfilePicture(profilePic);
-    }
-
-    public void HandleClosePupupButtonClicked()
+    public void Hide()
     {
         animator.SetTrigger(hashCode_Hide);
 
-        float animDuration = animator.GetCurrentAnimatorClipInfo(0)[0].clip.length;
+        float animDuration = animator.runtimeAnimatorController.animationClips[0].length;
 
-        new DelayAction(this, () => { 
+        new DelayAction(this, () => {
 
             gameObject.SetActive(false);
 
         }, animDuration);
     }
+
+    public void HandleClosePupupButtonClicked()
+    {
+        Hide();
+    }
+
+
+
 }

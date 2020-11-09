@@ -6,22 +6,8 @@ using System.Threading.Tasks;
 using UnityEngine;
 namespace Assets.Scripts.DataMarts
 {
-    public class PlayingDataMart
+    public class PlayingDataMart:MonoBehaviourSingleton<PlayingDataMart>
     {
-
-        /*This class is a Singleton*/
-        private static PlayingDataMart s_instance = null;
-        public static PlayingDataMart Instance
-        {
-            get
-            {
-                if (s_instance == null)
-                    s_instance = new PlayingDataMart();
-                return s_instance;
-            }
-        }
-        private PlayingDataMart() { }
-        /*End of Singleton Declaration*/
 
 
         [Serializable]
@@ -84,19 +70,8 @@ namespace Assets.Scripts.DataMarts
         public List<Pack> playingPacks = new List<Pack>();
         public Dictionary<int, int> packDictionary = new Dictionary<int, int>();
 
+        public Action<int> OnScoreChanged = delegate { };
 
-        public delegate void ScoreChangedCallback(bool increased);
-        public ScoreChangedCallback m_scoreChangedCallback = null;
-
-
-
-        public int m_score
-        {
-            get
-            {
-                return ((playingData != null)? playingData.total_score:0);
-            }
-        }
         public bool LoadLocalRawPlayingData()
         {
             playingData = LocalProvider.Instance.GetPlayingDataByUserId(UserDataMart.Instance.m_userData.id);
@@ -113,8 +88,8 @@ namespace Assets.Scripts.DataMarts
                     if (response.status.Equals("OK"))
                     {
                         playingData = response.data;
+
                         input.Signal();
-                        //LocalProvider.Instance.SavePlayingData(playingData);
                     }
                     else
                     {
@@ -128,9 +103,10 @@ namespace Assets.Scripts.DataMarts
             Debug.Log("ParsePlayingData");
             packDictionary.Clear();
             playingPacks.Clear();
+
             QuestionDataMart.Instance.packs.ForEach((p) =>
             {
-                Pack pack = new Pack() { 
+                var pack = new Pack() { 
                     id = p.id ,
                     currentIndex = 0, 
                     playingQuestions = new List<QuestionPlayingData>(),
@@ -202,28 +178,49 @@ namespace Assets.Scripts.DataMarts
                 }
             }
 
+            OnScoreChanged?.Invoke(playingData.total_score);
+
             Debug.Log("Parsed playing data");
         }
 
 
+        public int Score
+        {
+            get
+            {
+                if ((playingData != null))
+                {
+                    return playingData.total_score;
+                }
+                return 0;
+            }
+            set
+            {
+                if (playingData != null)
+                {
+                    playingData.total_score = value;
+
+                    OnScoreChanged?.Invoke(playingData.total_score);
+                }
+            }
+        }
 
         public void SubtractScore(int score)
         {
             if (playingData.total_score > 0)
             {
                 playingData.total_score -= score;
-                if (m_scoreChangedCallback != null) m_scoreChangedCallback(false);
             }
             else
             {
                 playingData.total_score = 0;
             }
         }
-        public void AddScore(int score)
-        {
-            playingData.total_score += score;
-            if (m_scoreChangedCallback != null) m_scoreChangedCallback(true);
-        }
+
+        //public void AddScore(int score)
+        //{
+        //    playingData.total_score += score;
+        //}
         public void AddNewPlayingQuestion(QuestionPlayingData playingQuestion)
         {
             foreach (var p in playingData.playing_packs)

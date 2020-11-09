@@ -32,8 +32,16 @@ public class StringsSO : ScriptableObject
     public string congrate;
     public string correct;
     public string incorrect;
+    public string incorrect_subtract;
     public string next_question;
     public string the_answer_is;
     public string timeout;
     public string press_one_more_time;
+
+    public string saved;
+    public string something_went_wrong;
+    public string ok;
+    public string end_now;
+
+    public string pls_login;
 }

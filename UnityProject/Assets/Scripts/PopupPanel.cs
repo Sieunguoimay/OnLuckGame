@@ -1,62 +1,84 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PopupPanel : MonoBehaviour
 {
-    private Animator m_animator;
+    public Text statusText;
+    public Text buttonText;
+
     public GameObject m_holder;
-    public delegate void ClosePanelCallback();
-    public ClosePanelCallback m_closePanelCallback;
-    // Start is called before the first frame update
+
+    private Animator m_animator;
+
+    public Action<bool> OnClose = delegate { };
+
+    private bool flag;
+
     private void Awake()
     {
-        m_animator = GetComponent<Animator>();
-        m_holder.SetActive(false);
-    }
-    void Start()
-    {
+        if (m_animator == null)
+        {
+            m_animator = GetComponent<Animator>();
 
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
+            m_animator.SetTrigger("show");
+        }
     }
 
-    public void Show()
+    public void Show(string statusText, string buttonText, Action<bool> onClose, bool resultFlag = true)
     {
         if (!m_holder.activeSelf)
         {
+            this.statusText.text = statusText;
+            this.buttonText.text = buttonText;
+
+            OnClose = onClose;
+            this.flag = resultFlag;
+
             m_holder.SetActive(true);
-            m_animator.SetTrigger("show");
+
+            if (m_animator != null)
+            {
+                m_animator.SetTrigger("show");
+            }
         }
         else
         {
             Debug.Log("Bleh");
         }
     }
-    public delegate void HideCallback();
-    public bool Hide(HideCallback callback = null)
+    public void HideImmediate()
     {
-        if (m_holder.activeSelf)
-        {
-            m_animator.SetTrigger("hide");
-            StartCoroutine(hide(callback));
-            return true;
-        }
-        return false;
-    }
-    private IEnumerator hide(HideCallback callback = null)
-    {
-        yield return new WaitForSeconds(m_animator.GetCurrentAnimatorClipInfo(0)[0].clip.length);
-        if(callback!=null)
-            callback();
         m_holder.SetActive(false);
     }
     public void OnClosePanelButtonClicked()
     {
-        m_closePanelCallback();
+        Hide(false);
     }
+    public void OnOKButtonClicked()
+    {
+        Hide(flag);
+    }
+    public bool Hide(bool value)
+    {
+        if (m_holder.activeSelf)
+        {
+            m_animator.SetTrigger("hide");
+
+            StartCoroutine(hide(value));
+
+            return true;
+        }
+        return false;
+    }
+    private IEnumerator hide(bool value)
+    {
+        yield return new WaitForSeconds(m_animator.runtimeAnimatorController.animationClips[0].length);
+
+        m_holder.SetActive(false);
+
+        OnClose?.Invoke(value);
+    }
+
 }

@@ -18,7 +18,7 @@ class CreatePacksTable extends Migration
             $table->bigInteger("season_id");
             $table->string("title");
             $table->string("sub_text")->default("HUONG DAN");
-            $table->string("icon");
+            // $table->string("icon");
             $table->string("question_type");
             $table->timestamps();
         });

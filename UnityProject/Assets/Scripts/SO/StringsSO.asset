@@ -37,11 +37,21 @@ MonoBehaviour:
   user_name: "Ch\u01B0a \u0111\u0103ng nh\u1EADp"
   qoute_popup_title: "Danh ng\xF4n"
   enter_new_password: "Nh\u1EADp m\u1EADt kh\u1EA9u m\u1EDBi"
-  congrate: "Xin Ch\xFAc M\u1EEBng!!\\n B\u1EA1n \u0111\xE3 ho\xE0n th\xE0nh g\xF3i
-    c\xE2u h\u1ECFi"
-  correct: "Ch\xEDnh X\xE1c!"
-  incorrect: "Kh\xF4ng Ch\xEDnh X\xE1c!"
+  congrate: "B\u1EA1n \u0111\xE3 v\u01B0\u1EE3t qua t\u1EA5t c\u1EA3 c\xE1c c\xE2u
+    h\u1ECFi! H\xE3y th\xF4ng b\xE1o cho ch\xFAng t\xF4i v\xE0 vui l\xF2ng ch\u1EDD
+    c\u1EADp nh\u1EADt."
+  correct: "Ch\xFAc m\u1EEBng\\nC\xE2u tr\u1EA3 l\u1EDDi ch\xEDnh x\xE1c, b\u1EA1n
+    \u0111\u01B0\u1EE3c +{0}UP\u200Boint"
+  incorrect: "R\u1EA5t ti\u1EBFc\u200B\\nC\xE2u tr\u1EA3 l\u1EDDi sai!"
+  incorrect_subtract: "R\u1EA5t ti\u1EBFc\u200B\\nC\xE2u tr\u1EA3 l\u1EDDi sai, b\u1EA1n
+    b\u1ECB -{0} UPoint"
   next_question: "C\xE2u Ti\u1EBFp Theo"
-  the_answer_is: "\u0110\xE1p \xE1n l\xE0"
+  the_answer_is: "\u0110\xE1p \xE1n l\xE0: {0}"
   timeout: "H\u1EBFt Th\u1EDDi Gian"
   press_one_more_time: "\u1EA4n th\xEAm m\u1ED9t l\u1EA7n n\u1EEFa \u0111\u1EC3 tho\xE1t"
+  saved: "\u0110\xE3 l\u01B0u"
+  something_went_wrong: "C\u1EADp nh\u1EADt kh\xF4ng th\xE0nh c\xF4ng"
+  ok: "\u0110\u1ED3ng \xFD"
+  end_now: "B\u1EA1n c\xF3 mu\u1ED1n k\u1EBFt th\xFAc c\xE2u h\u1ECFi ngay b\xE2y
+    gi\u1EDD?"
+  pls_login: "Vui l\xF2ng \u0111\u0103ng nh\u1EADp!"

@@ -14,21 +14,24 @@ public class GameDataDownloader : MonoBehaviour
     private bool isSaved = false;
     QuestionDataMart.Season season = null;
     ZipInputStream zipInputStream = null;
-    // Start is called before the first frame update
+
+    public Action<QuestionDataMart.Season> onDoneCallback = delegate { };
+
+    public Action<string, string, float, float> progressCallback = delegate { };
+
     void Start()
     {
         string url = AssetsDataMart.Instance.constantsSO.base_api_url+"/downloadgamedata";
         www = new WWW(url);
+
         Debug.Log("GameDataDownloader::Start");
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!www.isDone)
         {
-            if (progressCallback!=null)
-                progressCallback("Downloading:","KB",(float)www.size / 1024.0f,  (www.progress==0?0: (float)www.size / www.progress) / 1024.0f);
+            progressCallback?.Invoke("Downloading:","KB",(float)www.size / 1024.0f,  (www.progress==0?0: (float)www.size / www.progress) / 1024.0f);
         }
         if (www.isDone && !isUnzipped)
         {
@@ -41,8 +44,8 @@ public class GameDataDownloader : MonoBehaviour
 
             if (zipInputStream!=null)
             {
-                if (progressCallback != null)
-                    progressCallback("Unzipping:", "", zipInputStream.Position, 0);
+                progressCallback?.Invoke("Unzipping:", "", zipInputStream.Position, 0);
+
                 ZipEntry theEntry;
                 if ((theEntry = zipInputStream.GetNextEntry()) != null)
                 {
@@ -89,8 +92,7 @@ public class GameDataDownloader : MonoBehaviour
         {
             LocalProvider.Instance.LoadQuestionData(this,(ss)=> {
                 season = ss;
-                if (onDoneCallback != null)
-                    onDoneCallback(season);
+                onDoneCallback?.Invoke(season);
             });
             isLoaded = true;
         }
@@ -111,9 +113,4 @@ public class GameDataDownloader : MonoBehaviour
     {
         Debug.Log("GameDataDownloader::destroyed");
     }
-    public delegate void OnDoneCallback(QuestionDataMart.Season ss);
-    public OnDoneCallback onDoneCallback=null;
-
-    public delegate void ProgressCallback(string name,string unit, float downloaded,float total);
-    public ProgressCallback progressCallback = null;
 }

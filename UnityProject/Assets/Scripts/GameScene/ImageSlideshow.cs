@@ -5,37 +5,39 @@ using UnityEngine.UI;
 using Assets.Scripts.DataMarts;
 public class ImageSlideshow : MonoBehaviour
 {
-    public GameObject scrollbar;
+    public GameObject UiImageItemTemplate;
+
+    public Scrollbar scrollbar;
     public float scroll_pos = 0;
+    public int index = 0;
+    public int currentIndex { private set; get; }
+
     float[] pos;
     bool firstTouch = true;
     float firstTouchScrollPos = 0;
     bool direction = false;
     bool changeImage = false;
-    // Start is called before the first frame update
-    public int index = 0;
+
     void Start()
     {
-        Debug.Log("ImageSlideshow:Start");
     }
 
-    // Update is called once per frame
-    //public int ChildCountActive(Transform t)
-    //{
-    //    int k = 0;
-    //    foreach (Transform c in t)
-    //    {
-    //        if (c.gameObject.activeSelf)
-    //            k++;
-    //    }
-    //    return k;
-    //}
-    //private int childCount = 0;
-    //public void Init()
-    //{
-    //    childCount = ChildCountActive(transform);
-    //}
-    public int currentIndex { private set; get; }
+    public void SetToDefault()
+    {
+        UiImageItemTemplate.SetActive(true);
+
+        foreach (Transform child in transform)
+        {
+            if (child.gameObject != UiImageItemTemplate)
+            {
+                Destroy(child.gameObject);
+            }
+        }
+        scrollbar.value = 0;
+        scroll_pos = 0;
+        index = 0;
+    }
+
     void Update()
     {
         int childCount = transform.childCount;
@@ -104,20 +106,23 @@ public class ImageSlideshow : MonoBehaviour
             }
         }
 
+    }
+    public void SetQuestionImages(List<QuestionDataMart.Image> images)
+    {
 
-        //for (int i = 0; i < childCount; i++)
-        //{
-        //    if (scroll_pos < pos[i] + (distance / 2) && scroll_pos > pos[i] - (distance / 2))
-        //    {
-        //        transform.GetChild(i).localScale = Vector2.Lerp(transform.GetChild(i).localScale, new Vector2(1f, 1f), 0.25f);
-        //        for(int a = 0; a< childCount; a++)
-        //        {
-        //            if (a != i)
-        //            {
-        //                transform.GetChild(a).localScale = Vector2.Lerp(transform.GetChild(a).localScale, new Vector2(0.8f, 0.8f), 0.25f);
-        //            }
-        //        }
-        //    }
-        //}
+        SetToDefault();
+
+        if (images.Count > 0)
+        {
+            UiImageItemTemplate.SetActive(false);
+
+            images.ForEach((image) =>
+            {
+                var newItem = Instantiate(UiImageItemTemplate) as GameObject;
+                newItem.GetComponent<Image>().sprite = image.sprite;
+                newItem.transform.parent = transform;
+                newItem.SetActive(true);
+            });
+        }
     }
 }

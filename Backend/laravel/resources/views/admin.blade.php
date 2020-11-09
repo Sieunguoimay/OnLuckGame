@@ -131,8 +131,8 @@ Client.DisplayUserList = function(){
         '<div class="row border-bottom user-item" index="'+index+'">'+
             '<div class="container">'+
                 '<div class="row">'+
-                    '<div class="col-1 p-1 my-auto"><img src="'+user.profile_picture+'" style="width:100%"/></div>'+
-                    '<div class="col-5 pl-1 pr-0 my-auto h6">'+user.name+'</div>'+
+                    // '<div class="col-1 p-1 my-auto"><img src="'+user.profile_picture+'" style="width:100%"/></div>'+
+                    '<div class="col-6 pl-1 pr-0 my-auto h6">'+user.name+'</div>'+
                     '<div class="col-6 p-0 my-auto">'+user.email+'</div>'+
                 '</div>'+
                 '<div class="row">'+
@@ -481,8 +481,8 @@ Client.DisplayPackList = function(){
         '<div class="container px-0 pack-item mb-2 pt-2 border-top" index="'+index+'" season_id="'+pack.season_id+'" question_type="'+pack.question_type+'">'+
             '<div class="row">'+
                 '<div class="col-1 pl-1 pr-0 my-auto h6 text-center">'+(index+1)+'</div>'+
-                '<div class="col-1 p-0 my-auto"><img src="'+pack.icon+'" style="width:100%"/></div>'+
-                '<div class="col-5 h5">'+pack.title+'</div>'+
+                // '<div class="col-1 p-0 my-auto"><img src="'+pack.icon+'" style="width:100%"/></div>'+
+                '<div class="col-6 h5">'+pack.title+'</div>'+
                 '<div class="col-5">'+pack.sub_text+'</div>'+
             '</div>'+
             '<div class="row">'+
@@ -517,10 +517,10 @@ Client.TogglePackCreator = function(status,index=-1){
                 '<input type="hidden" name="season_id" value='+season.id+'>'+
 
 
-                '<div class="input-group">'+
-                '<label for="icon" class="input-group-text">Pack Icon <img id="icon_preview" src="'+pack.icon+'" style="width:100px"/></label>'+
-                '<input type="file" id="icon" name="icon" accept="image/*" required>'+
-                '</div>'+
+                // '<div class="input-group">'+
+                // '<label for="icon" class="input-group-text">Pack Icon <img id="icon_preview" src="'+pack.icon+'" style="width:100px"/></label>'+
+                // '<input type="file" id="icon" name="icon" accept="image/*">'+
+                // '</div>'+
 
                 '<div class="input-group">'+
                 '<label for="title" class="input-group-text">Title </label>'+
@@ -553,8 +553,13 @@ Client.TogglePackCreator = function(status,index=-1){
             formData.append('season_id',$(this).find('input[name="season_id"]').val());
             formData.append('title',$(this).find('input[name="title"]').val());
             formData.append('sub_text',$(this).find('input[name="sub_text"]').val());
-            formData.append('icon',$(this).find('input[name="icon"]')[0].files[0]);
             formData.append('question_type',$(this).find('select[name="question_type"]').val());
+
+            // var files = $(this).find('input[name="icon"]')[0].files;
+
+            // if(files.length>0){
+            //     formData.append('icon',files[0]);
+            // }
 
             var url = Client.baseUrl+'/createpack';
             if(index!=-1){
@@ -639,8 +644,13 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
             question = Client.questionList[index];
             question.hintsArray = JSON.parse(question.hints);
             question.imagesArray = JSON.parse(question.images);
-            if(mode==1)
+
+            if(mode==0){
+                question.answersArray = JSON.parse(question.answers);
+            }
+            if(mode==1){
                 question.choicesArray = JSON.parse(question.choices);
+            }
         }
 
         var html=
@@ -652,16 +662,32 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
                 '<div class="input-group">'+
                 '<label for="question" class="input-group-text">Question </label>'+
                 '<input type="text" id="question" name="question" class="form-control" value="'+question.question+'" required>'+
-                '</div>'+
+                '</div>';
+                if(mode==0){
 
-
-                (mode==0?(
-
+                    html+=
                     '<div class="input-group">'+
-                    '<label for="answer" class="input-group-text">Answer </label>'+
-                    '<input type="text" id="answer" name="answer" class="form-control" value="'+question.answer+'" required>'+
-                    '</div>' 
-                ):(
+                        '<label class="input-group-text">Answers </label>'+
+                        '<div id="answer_container">';
+
+                    if(index!=-1){
+                        for(var i = 0; i<question.answersArray.length; i++){
+                            html+='<input type="text" name="answers" class="form-control" value="'+question.answersArray[i]+'">';
+                        }
+                    }else{
+                        html+='<input type="text" name="answers" class="form-control">';
+                    }                
+                    html+=
+                        '</div>'+
+                        '<div style="display:inline-block;align-self:flex-end">'+
+                            '<button type="button" id="remove_answer_button">-</button>'+
+                            '<button type="button" id="new_answer_button">+</button>'+
+                        '</div>'+
+                    '</div>';
+
+                    }
+                html+=
+                (mode==0?(''):(
 
                     '<div class="input-group">'+
                         '<label for="choice" class="input-group-text">Choices </label>'+
@@ -685,12 +711,15 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
                     '<div class="input-group">'+
                     '<label for="time" class="input-group-text">Time </label>'+
                     '<input type="number" id="time" name="time" class="form-control" value='+question.time+' required>'+
+                    '</div>'+
+
+                    
+                    '<div class="input-group">'+
+                    '<label for="minus_score" class="input-group-text">Wrong Answer Negative Score </label>'+
+                    '<input type="number" id="minus_score" name="minus_score" class="form-control" value=-15 required>'+
                     '</div>'
                 ))+
                 
-
-
-
 
                 '<div class="input-group">'+
                 '<label for="score" class="input-group-text">Score </label>'+
@@ -736,7 +765,7 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
                 '<div class="input-group">'+
                 '<label for="images" class="input-group-text">New Images </label>'+
                 '<div class="card" id="images_preview"></div>'+
-                '<input type="file" id="images" name="images" accept="image/*" multiple="multiple" '+((index!=-1)?'':'required')+'>'+
+                '<input type="file" id="images" name="images" accept="image/*" multiple="multiple">'+
                 '</div>'+
 
                 '<button type="submit" class="btn btn-primary">Submit</button>'+
@@ -748,10 +777,16 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
             Client.ToggleQuestionCreator(false);
         });
         $('#new_hint_button').on('click',function(){
-            $('<input type="text" name="hints" class="form-control" required>').appendTo('#hint_container');
+            $('<input type="text" name="hints" class="form-control">').appendTo('#hint_container');
         });
         $('#remove_hint_button').on('click',function(){
             $('#hint_container input').last().remove();
+        });
+        $('#new_answer_button').on('click',function(){
+            $('<input type="text" name="answers" class="form-control" required>').appendTo('#answer_container');
+        });
+        $('#remove_answer_button').on('click',function(){
+            $('#answer_container input').last().remove();
         });
         $('.existing_image_preview_button').on('click',function(){
             tobeDeletedImages.push($(this).attr('index'));
@@ -771,6 +806,7 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
         var tobeDeletedImages = [];
         var imagesArray = [];
         $('#images').on('change',function(){
+
             readSelectedImage($(this)[0].files,function(fileReader){
                 var index = imagesArray.length;
                 var $element = $('<div><img src="'+fileReader.result+'" class="my-1" style="width:80px;"/><button class="image_preview_button" index="'+index+'" type="button" style="width:25px;">x</button></div>');
@@ -778,35 +814,55 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
                 fileReader.$element = $element;
                 imagesArray.push(fileReader);
             });
+            
         });
 
         $('#question_form').submit(function(event){
             event.preventDefault();
-            
+
+
             var hints = [];
             $('input[name="hints"]').each(function(){
-                hints.push($(this).val());
+                var h = $(this).val();
+                if(h!=""){
+                    hints.push(h);
+                }
             });
-
+            var answers = [];
+            $('input[name="answers"]').each(function(){
+                var a = $(this).val();
+                if(a!=""){
+                    answers.push(a);
+                }
+            });
 
             var formData = new FormData();
             formData.append('question_type',$(this).find('input[name="pack_id"]').attr('question_type'));
             formData.append('question',$(this).find('input[name="question"]').val());
 
             if(mode==0){
-                formData.append('answer',$(this).find('input[name="answer"]').val());
+                // var str = $(this).find('input[name="answers"]').val();
+                // var strList = str.split(';');
+                // formData.append('answers',JSON.stringify(strList));
+                if(answers.length>0){
+                    formData.append('answers',JSON.stringify(answers));//$(this).find('select[name="answer"]').val());
+                }
             }else if(mode==1){
                 var choices = [];
                 $('input[name="choices"]').each(function(){
                     choices.push($(this).val());
                 });
+                formData.append('answers',$(this).find('select[name="answer"]').val());
                 formData.append('choices',JSON.stringify(choices));
-                formData.append('answer',$(this).find('select[name="answer"]').val());
                 formData.append('time',$(this).find('input[name="time"]').val());
+                formData.append('minus_score',$(this).find('input[name="minus_score"]').val());
             }
 
             formData.append('score',$(this).find('input[name="score"]').val());
-            formData.append('hints',JSON.stringify(hints));
+
+            if(hints.length>0){
+                formData.append('hints',JSON.stringify(hints));
+            }
             
             var images = imagesArray;// ('input[name="images"]')[0].files;
             for(var i = 0; i<images.length; i++){
@@ -849,28 +905,39 @@ Client.ToggleQuestionCreator = function(status, mode, index=-1){
         });
     }
 }
+
 Client.DisplayQuestionList = function(){
+
     if(Client.questionList == null) return;
+
     $('#question_count').text(Client.questionList.length);
+
     var html = '';
+
     for(var index = 0; index<Client.questionList.length; index++){
+
         var question = Client.questionList[index];
-        var images = JSON.parse(question.images);
-        //console.log(images);
+
+        var images = ((question.images=="")?null:JSON.parse(question.images));
+
         html+=
         '<div class="container px-0 mb-1 question-item border-top" index='+index+'>'+
             '<div class="row">'+
                 '<div class="col-1 h6 my-auto text-center">'+(index+1)+'</div>'+
-                '<div class="col-1 p-0 my-auto"><img src="'+images[0]+'" style="width:100%"/></div>'+
-                '<div class="col-5 pl-1 pr-0 my-auto">'+question.question+'</div>'+
-                '<div class="col-5 pl-1 pr-0 my-auto text-center">'+question.answer+'</div>'+
+
+                ((images==null)?'':('<div class="col-1 p-0 my-auto"><img src="'+images[0]+'" style="width:100%"/></div>'))+
+                
+                '<div class="col-5 pl-1 pr-0 ">'+question.question+'</div>'+
+                '<div class="col-5 pl-1 pr-0 text-center">'+question.answer+'</div>'+
             '</div>'+
             '<div class="row">'+
                 '<div class="col-12 pl-1 pr-0 my-auto text-right"><small style="font-style:italic">'+question.score+' | '+question.hints+'</small></div>'+
             '</div>'+
         '</div>';
     }
+
     Client.$questionListElement.html(html);
+
     $('.question-item').on('click',function(){
         QuestionItemSelector.Select($(this));
     });
@@ -1040,7 +1107,7 @@ function OnDeleteQuestionButtonClick(){
     var question = Client.questionList[QuestionItemSelector.$element.attr('index')];
     var id = question.id;
     $.post(Client.baseUrl+"/deletequestion",{id:id,pack_id:question.pack_id},function(response){
-        //console.log(response);
+        console.log(response);
         var json = JSON.parse(response);
         if(json.status == "OK"){
             Client.questionList = json.data;
