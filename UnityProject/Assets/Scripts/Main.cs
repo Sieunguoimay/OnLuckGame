@@ -19,11 +19,14 @@ public class Main : MonoBehaviourSingleton<Main>
 
     public int currentPackIndex = -1;
 
+    private bool Initialized = false;
     private void Awake()
     {
-        if (!IsAwakened)
+        if (!Initialized)
         {
-            DontDestroyOnLoad(this);
+            Initialized = true;
+
+            //DontDestroyOnLoad(this);
 
             Application.runInBackground = false;
 

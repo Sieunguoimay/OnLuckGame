@@ -32,8 +32,8 @@ public class UtilityButtons : MonoBehaviour
 
     public void LockAllUI(bool state)
     {
-        SeeAnswerButton.interactable = state;
-        HintButton.interactable = state;
+        SeeAnswerButton.gameObject.SetActive(state);
+        HintButton.gameObject.SetActive(state);
     }
 
     public void ResetAll(bool hasAds)

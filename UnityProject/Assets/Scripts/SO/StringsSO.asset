@@ -55,3 +55,6 @@ MonoBehaviour:
   end_now: "B\u1EA1n c\xF3 mu\u1ED1n k\u1EBFt th\xFAc c\xE2u h\u1ECFi ngay b\xE2y
     gi\u1EDD?"
   pls_login: "Vui l\xF2ng \u0111\u0103ng nh\u1EADp!"
+  you_have_already_answered_this_question: "(B\u1EA1n \u0111\xE3 tr\u1EA3 l\u1EDDi
+    c\xE2u h\u1ECFi n\xE0y)"
+  answer: "\xD0\xE1p \xE1n"

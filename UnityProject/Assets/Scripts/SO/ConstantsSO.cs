@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif //UNITY_EDITOR
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "ConstantsSO",menuName ="ScriptableObjects/ConstantsSO",order = 1)]
@@ -26,6 +28,7 @@ public class ConstantsSO : ScriptableObject
     public Color mcqCorrectColor;
     public Color mcqWrongColor;
 }
+#if UNITY_EDITOR
 [CustomEditor(typeof(ConstantsSO))]
 [CanEditMultipleObjects]
 public class ConstantsSOCE: Editor {
@@ -38,3 +41,4 @@ public class ConstantsSOCE: Editor {
         EditorGUI.indentLevel--;
     }
 }
+#endif //UNITY_EDITOR

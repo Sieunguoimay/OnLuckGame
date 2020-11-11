@@ -1,24 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ProgressBar : MonoBehaviour
 {
-    public class ProgressPublisher
-    {
-        public delegate void PublishProgress(float value);
-        public PublishProgress progressListener = null;
-        public void publishProgress(float value)
-        {
-            Debug.Log("publishProgress: " + value);
-            if (progressListener != null)
-            {
-                Debug.Log("progressListener!");
-                progressListener(value);
-            }
-        }
-    };
+
     private Slider slider;
     private float targetValue;
     private bool done;

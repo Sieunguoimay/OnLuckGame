@@ -121,6 +121,7 @@ public class ImageSlideshow : MonoBehaviour
                 var newItem = Instantiate(UiImageItemTemplate) as GameObject;
                 newItem.GetComponent<Image>().sprite = image.sprite;
                 newItem.transform.parent = transform;
+                newItem.transform.localScale = Vector3.one;
                 newItem.SetActive(true);
             });
         }

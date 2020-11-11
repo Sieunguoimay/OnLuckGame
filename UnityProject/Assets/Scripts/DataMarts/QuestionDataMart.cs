@@ -129,21 +129,17 @@ namespace Assets.Scripts.DataMarts
         public Action<string, string, float ,float> progressCallback = null;
 
         public OnluckLocalMetadata onluckLocalMetadata = null;
-        public ProgressBar.ProgressPublisher progressPublisher;
+        public Action<float> publishProgress = delegate { };
         private int activationCode = 0;
 
         public ILoadQuestionListener QuestionLoadListener = null;
 
         public void Init()
         {
-            m_gameDataReadyCallback = null;
-            m_gameDataCompletedCallback = null;
-            m_askForPermissionCallback = null;
-            progressPublisher = new ProgressBar.ProgressPublisher();
         }
         public bool LoadMetadata()
         {
-            progressPublisher.publishProgress(0.1f);
+            publishProgress?.Invoke(0.1f);
 
             var metadata = LocalProvider.Instance.LoadOnluckLocalMetadata();
 
@@ -151,7 +147,7 @@ namespace Assets.Scripts.DataMarts
             {
                 Debug.Log("Loaded local onluck metadata " + metadata.activation_code);
                 onluckLocalMetadata = metadata;
-                progressPublisher.publishProgress(0.3f);
+                publishProgress?.Invoke(0.3f);
 
                 return true;
             }
@@ -161,7 +157,7 @@ namespace Assets.Scripts.DataMarts
 
         public void SetFromServerOnluckMetadata(MonoBehaviour context,HttpClient.OnluckMetadata metadata)
         {
-            progressPublisher.publishProgress(0.6f);
+            publishProgress?.Invoke(0.6f);
             if (onluckLocalMetadata.uptodate_token != metadata.uptodate_token)
             {
                 onluckLocalMetadata.uptodate_token = metadata.uptodate_token;
@@ -181,7 +177,7 @@ namespace Assets.Scripts.DataMarts
                         packs = season.packs;
 
                         Debug.Log("Loaded Question Data " + packs.Count);
-                        progressPublisher.publishProgress(1.0f);
+                        publishProgress?.Invoke(1.0f);
                         m_gameDataReadyCallback?.Invoke();
                         m_gameDataCompletedCallback?.Invoke();
                     }
@@ -200,7 +196,7 @@ namespace Assets.Scripts.DataMarts
         {
             Debug.Log("Zeze PermissionGranted");
             m_gameDataCompletedCallback();
-            progressPublisher.publishProgress(1.0f);
+            publishProgress?.Invoke(1.0f);
 
             var gameDataDownloader = new GameObject("GameDataDownloader",typeof(GameDataDownloader));
             gameDataDownloader.transform.parent = transform;

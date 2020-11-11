@@ -196,6 +196,12 @@ namespace Assets.Scripts.GameScene
 
                     mainGame.LockAnswerPanel(isActive);
 
+                    if (!isActive)
+                    {
+                        mainGame.SetPrevAnswer(AssetsDataMart.Instance.constantsSO.stringsSO.answer+":"+typedQuestion.FirstAnswer);
+                        mainGame.SetQuestion(typedQuestion.question + "\n" + AssetsDataMart.Instance.constantsSO.stringsSO.you_have_already_answered_this_question);
+                    }
+
                 }
                 else if (Mode == Modes.MCQ)
                 {

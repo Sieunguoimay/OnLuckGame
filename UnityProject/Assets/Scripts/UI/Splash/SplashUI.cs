@@ -17,7 +17,7 @@ public class SplashUI : MonoBehaviour
 
     private Utils.Neuron hideSplashSceneNeuron= new Utils.Neuron(2);
 
-    void Start()
+    void Awake()
     {
         DontDestroyOnLoad(this);
 
@@ -25,7 +25,7 @@ public class SplashUI : MonoBehaviour
 
         hideSplashSceneNeuron.output = HideSplashScene;
 
-        QuestionDataMart.Instance.progressPublisher.progressListener += (value) => SetProgressBar(value);
+        QuestionDataMart.Instance.publishProgress += SetProgressBar;
 
         QuestionDataMart.Instance.m_gameDataCompletedCallback += hideSplashSceneNeuron.inputs[0].Signal;
 

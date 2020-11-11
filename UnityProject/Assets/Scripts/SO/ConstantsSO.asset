@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e44c1f75174c7c3448a76ef4a364ce08, type: 3}
   m_Name: ConstantsSO
   m_EditorClassIdentifier: 
-  base_url: localhost:8000
-  base_api_url: localhost:8000/api/onluck
+  base_url: onluck.vn
+  base_api_url: onluck.vn/api/onluck
   stringsSO: {fileID: 11400000, guid: 1e0a4765348f64f41a4da8797e565dd4, type: 2}
   rank1IconSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
   rank2IconSprite: {fileID: 21300000, guid: cc9b3428819a6184caf40342d2b7dede, type: 3}
