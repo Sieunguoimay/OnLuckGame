@@ -21,17 +21,30 @@ public class GameDataDownloader : MonoBehaviour
 
     void Start()
     {
-        string url = AssetsDataMart.Instance.constantsSO.base_api_url+"/downloadgamedata";
-        www = new WWW(url);
+        string url = AssetsDataMart.Instance.constantsSO.base_api_url + "/downloadgamedata";
+        //www = new WWW(url);
+        progressCallback?.Invoke("Downloading: Game data", "", 0,0);
 
+        HttpClient.Instance.DownloadGameData((ss) => {
+            if (ss != null)
+            {
+                season = LocalProvider.Instance.ParseSeason(ss);
+            }
+            onDoneCallback?.Invoke(season);
+        });
         Debug.Log("GameDataDownloader::Start");
     }
 
     void Update()
     {
+        
+    }
+
+    public void Step()
+    {
         if (!www.isDone)
         {
-            progressCallback?.Invoke("Downloading:","KB",(float)www.size / 1024.0f,  (www.progress==0?0: (float)www.size / www.progress) / 1024.0f);
+            progressCallback?.Invoke("Downloading:", "KB", (float)www.size / 1024.0f, (www.progress == 0 ? 0 : (float)www.size / www.progress) / 1024.0f);
         }
         if (www.isDone && !isUnzipped)
         {
@@ -42,7 +55,7 @@ public class GameDataDownloader : MonoBehaviour
                 SaveZipFileToLocal();
             }
 
-            if (zipInputStream!=null)
+            if (zipInputStream != null)
             {
                 progressCallback?.Invoke("Unzipping:", "", zipInputStream.Position, 0);
 
@@ -62,7 +75,7 @@ public class GameDataDownloader : MonoBehaviour
 
                     if (fileName != String.Empty)
                     {
-                        string filename = Application.persistentDataPath+"/"+theEntry.Name;// docPath.Substring(0, docPath.Length - 8);
+                        string filename = Application.persistentDataPath + "/" + theEntry.Name;// docPath.Substring(0, docPath.Length - 8);
                         //filename += theEntry.Name;
                         Debug.Log("Unzipping: " + filename);
                         using (FileStream streamWriter = File.Create(filename))
@@ -84,13 +97,13 @@ public class GameDataDownloader : MonoBehaviour
                         }
                     }
                 }
-                if(theEntry==null)
+                if (theEntry == null)
                     isUnzipped = true;
             }
         }
-        if (isUnzipped&&!isLoaded)
+        if (isUnzipped && !isLoaded)
         {
-            LocalProvider.Instance.LoadQuestionData(this,(ss)=> {
+            LocalProvider.Instance.LoadQuestionData(this, (ss) => {
                 season = ss;
                 onDoneCallback?.Invoke(season);
             });

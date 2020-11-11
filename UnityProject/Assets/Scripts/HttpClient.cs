@@ -449,6 +449,18 @@ public class HttpClient : MonoBehaviourSingleton<HttpClient>
         });
     }
 
+    public void DownloadGameData(Action<Season> callback)
+    {
+        Utils.Instance.GetRequest(BaseApiUrl + "/downloadgamedata", (response) =>
+        {
+            Debug.Log(response);
+            
+            var res = JsonUtility.FromJson<Season>(response);
+            
+            callback(res);
+        });
+    }
+
     [Serializable]
     public class SubmittingResponse
     {

@@ -115,6 +115,7 @@ namespace Assets.Scripts.DataMarts
             public int uptodate_token = -1;
             public string season_name;
             public string quote;
+            public string app_rating_url = "";
             public string intro_content;
             public string guideline_content;
         }

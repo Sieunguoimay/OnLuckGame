@@ -344,6 +344,11 @@ public class LocalProvider
     public IEnumerator loadQuestionData(Action<QuestionDataMart.Season> callback)
     {
         var ss = Utils.Instance.LoadFileToObjectNoWrapping<HttpClient.Season>("game_data.json");
+        callback?.Invoke(ParseSeason(ss));
+        yield return null;
+    }
+    public QuestionDataMart.Season ParseSeason(HttpClient.Season ss)
+    {
         if (ss != null)
         {
             var season = new QuestionDataMart.Season
@@ -369,7 +374,7 @@ public class LocalProvider
                 //Texture2D texture = Utils.Instance.LoadFileToTexture(Path.GetFileName(pack.icon.path));
                 //pack.icon.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0, 0));
                 pack.questions = new List<QuestionDataMart.EmptyQuestion>();
-                
+
                 foreach (var q in p.typed_questions)
                 {
                     var question = new QuestionDataMart.EmptyQuestion()
@@ -388,11 +393,10 @@ public class LocalProvider
                 }
                 season.packs.Add(pack);
             }
-            callback?.Invoke(season);
+            return season;
         }
-        yield return null;
+        return null;
     }
-
     //public void LoadQuestionData(LoadLocalDataCallback<QuestionDataMart.Season> callback)
     //{
     //    QuestionDataMart.Season season = Utils.Instance.LoadFileToObject<QuestionDataMart.Season>("game_data.json");

@@ -173,7 +173,7 @@ public class Menu : MonoBehaviour
     }
     public void OnRatingButtonClicked()
     {
-        Application.OpenURL(HttpClient.Instance.BaseUrl);
+        Application.OpenURL(QuestionDataMart.Instance.onluckLocalMetadata.app_rating_url);
     }
 
 
