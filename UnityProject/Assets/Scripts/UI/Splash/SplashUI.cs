@@ -19,6 +19,7 @@ public class SplashUI : MonoBehaviour
 
     void Awake()
     {
+
         DontDestroyOnLoad(this);
 
         hideSplashSceneLock = true;

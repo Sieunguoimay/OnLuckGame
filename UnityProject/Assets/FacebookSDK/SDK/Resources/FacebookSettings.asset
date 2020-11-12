@@ -24,7 +24,7 @@ MonoBehaviour:
   status: 1
   xfbml: 0
   frictionlessRequests: 1
-  androidKeystorePath: C:\Vuduydu\Android\keystore2\unity.keystore
+  androidKeystorePath: D:\CodingSpace\AndroidProjects\Keystore\unity.keystore
   iosURLSuffix: 
   appLinkSchemes:
   - list: []

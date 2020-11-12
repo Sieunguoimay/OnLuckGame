@@ -115,7 +115,7 @@ namespace Assets.Scripts.DataMarts
             public int uptodate_token = -1;
             public string season_name;
             public string quote;
-            public string app_rating_url = "";
+            public string app_rating_url = "http://onluck.vn";
             public string intro_content;
             public string guideline_content;
         }
@@ -167,30 +167,32 @@ namespace Assets.Scripts.DataMarts
                 onluckLocalMetadata.guideline_content = metadata.guideline_content;
                 LocalProvider.Instance.SaveOnluckLocalMetadata(onluckLocalMetadata);
             }
-            if (onluckLocalMetadata.activation_code == metadata.activation_code)
-            {
-                Debug.Log("You're good to go. let's go to load local question data ");
-                LocalProvider.Instance.LoadQuestionData(context, (ss) =>
-                {
-                    season = ss;
-                    if (season != null)
-                    {
-                        packs = season.packs;
+            OnPermissionGranted();
 
-                        Debug.Log("Loaded Question Data " + packs.Count);
-                        publishProgress?.Invoke(1.0f);
-                        m_gameDataReadyCallback?.Invoke();
-                        m_gameDataCompletedCallback?.Invoke();
-                    }
-                });
-            }
-            else
-            {
-                activationCode = metadata.activation_code;
-                Debug.Log("You need to download this new data. otherwise, no game");
-                //ask menu presenter for permission
-                m_askForPermissionCallback?.Invoke();
-            }
+            //if (onluckLocalMetadata.activation_code == metadata.activation_code)
+            //{
+            //    Debug.Log("You're good to go. let's go to load local question data ");
+            //    LocalProvider.Instance.LoadQuestionData(context, (ss) =>
+            //    {
+            //        season = ss;
+            //        if (season != null)
+            //        {
+            //            packs = season.packs;
+
+            //            Debug.Log("Loaded Question Data " + packs.Count);
+            //            publishProgress?.Invoke(1.0f);
+            //            m_gameDataReadyCallback?.Invoke();
+            //            m_gameDataCompletedCallback?.Invoke();
+            //        }
+            //    });
+            //}
+            //else
+            //{
+            //    activationCode = metadata.activation_code;
+            //    Debug.Log("You need to download this new data. otherwise, no game");
+            //    //ask menu presenter for permission
+            //    m_askForPermissionCallback?.Invoke();
+            //}
 
         }
         public void OnPermissionGranted()

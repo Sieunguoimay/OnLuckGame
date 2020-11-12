@@ -20,6 +20,8 @@ public class UtilityButtons : MonoBehaviour
 
     public Action SeeAnswerButtonClicked = delegate { };
 
+    public Action NoAdsToShow = delegate { };
+
     private void Awake()
     {
         SeeAnswerButton.gameObject.SetActive(false);
@@ -35,34 +37,49 @@ public class UtilityButtons : MonoBehaviour
         SeeAnswerButton.gameObject.SetActive(state);
         HintButton.gameObject.SetActive(state);
     }
-
-    public void ResetAll(bool hasAds)
+    public void ShowAnswerButton(bool state)
     {
-        this.hasAds = hasAds;
-
-        if (hasAds)
-        {
-            HintAdsIcon.SetActive(true);
-            SeeAnswerAdsIcon.SetActive(true);
-            SeeAnswerButton.gameObject.SetActive(false);
-        }
-        else
-        {
-            HintAdsIcon.SetActive(false);
-            SeeAnswerAdsIcon.SetActive(false);
-            SeeAnswerButton.gameObject.SetActive(true);
-        }
-
-        if (ShouldShowHintButton)
-        {
-            HintButton.gameObject.SetActive(true);
-        }
-        else
-        {
-            HintButton.gameObject.SetActive(false);
-            SeeAnswerButton.gameObject.SetActive(true);
-        }
+        SeeAnswerButton.gameObject.SetActive(state);
     }
+    public void ShowHintButton(bool state)
+    {
+        HintButton.gameObject.SetActive(state);
+    }
+    public void ShowHintAdIcons(bool state)
+    {
+        HintAdsIcon.SetActive(state);
+    }
+    public void ShowSeeAnswerAdIcon(bool state)
+    {
+        SeeAnswerAdsIcon.SetActive(state);
+    }
+    //public void ResetAll(bool hasAds = true)
+    //{
+    //    this.hasAds = hasAds;
+
+    //    if (hasAds)
+    //    {
+    //        HintAdsIcon.SetActive(true);
+    //        SeeAnswerAdsIcon.SetActive(true);
+    //        SeeAnswerButton.gameObject.SetActive(false);
+    //    }
+    //    else
+    //    {
+    //        HintAdsIcon.SetActive(false);
+    //        SeeAnswerAdsIcon.SetActive(false);
+    //        SeeAnswerButton.gameObject.SetActive(true);
+    //    }
+
+    //    if (ShouldShowHintButton)
+    //    {
+    //        HintButton.gameObject.SetActive(true);
+    //    }
+    //    else
+    //    {
+    //        HintButton.gameObject.SetActive(false);
+    //        SeeAnswerButton.gameObject.SetActive(true);
+    //    }
+    //}
 
     public void OnShareButtonClicked()
     {
@@ -71,52 +88,57 @@ public class UtilityButtons : MonoBehaviour
 
     public void OnHintButtonClicked()
     {
-        if (hasAds)
+        //if (hasAds)
+        //{
+        AdsManagement.Instance.ShowRewardedAds(success =>
         {
-            AdsManagement.Instance.ShowRewardedAds(success =>
+            if (success)
             {
-                if (success)
-                {
-                    HintAdsIcon.SetActive(false);
-                    SeeAnswerButton.gameObject.SetActive(true);
+                HintAdsIcon.SetActive(false);
+                HintButton.gameObject.SetActive(false);
+                SeeAnswerButton.gameObject.SetActive(true);
 
-                    hintPanel.ShowHint();
-                }
-                else
-                {
+                hintPanel.ShowHint();
+            }
+            else
+            {
+                NoAdsToShow?.Invoke();
+            }
+        });
+        //}
+        //else
+        //{
+        //    HintAdsIcon.SetActive(false);
+        //    HintButton.gameObject.SetActive(false);
+        //    SeeAnswerButton.gameObject.SetActive(true);
 
-                }
-            });
-        }
-        else
-        {
-            hintPanel.ShowHint();
-        }
+        //    hintPanel.ShowHint();
+        //}
     }
     public void OnSeeAnswerButtonClicked()
     {
-        if (hasAds)
+        //if (hasAds)
+        //{
+        AdsManagement.Instance.ShowRewardedAds(success =>
         {
-            AdsManagement.Instance.ShowRewardedAds(success =>
+            if (success)
             {
-                if (success)
-                {
-                    SeeAnswerAdsIcon.SetActive(false);
+                SeeAnswerAdsIcon.SetActive(false);
                
-                    SeeAnswerButtonClicked?.Invoke();
-                    //hintPanel.ShowAnswer();
-                }
-                else
-                {
-
-                }
-            });
-        }
-        else
-        {
-            SeeAnswerButtonClicked?.Invoke();
-            //hintPanel.ShowAnswer();
-        }
+                SeeAnswerButtonClicked?.Invoke();
+                //hintPanel.ShowAnswer();
+            }
+            else
+            {
+                NoAdsToShow?.Invoke();
+            }
+        });
+        //}
+        //else
+        //{
+        //    SeeAnswerButtonClicked?.Invoke();
+        //    //hintPanel.ShowAnswer();
+        //}
     }
 
     public void Share()

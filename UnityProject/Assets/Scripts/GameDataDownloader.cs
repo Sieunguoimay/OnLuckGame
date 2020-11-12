@@ -28,6 +28,7 @@ public class GameDataDownloader : MonoBehaviour
         HttpClient.Instance.DownloadGameData((ss) => {
             if (ss != null)
             {
+                //LocalProvider.Instance.SaveSeason(ss);
                 season = LocalProvider.Instance.ParseSeason(ss);
             }
             onDoneCallback?.Invoke(season);

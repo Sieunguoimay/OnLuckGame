@@ -57,6 +57,7 @@ public class MainGame : MonoBehaviour
         popup.HideImmediate();
 
         UiTimerText.m_timeoutCallback += OnMQCQuestionTimeout;
+        utilityButtons.NoAdsToShow += HandleNoAdsToShow;
 
         m_mainGamePresenter = GetComponent<MainGamePresenter>();
 
@@ -290,7 +291,13 @@ public class MainGame : MonoBehaviour
             UiMQCAnswerPanel.SetActive(true);
         }
     }
-
+    public void HandleNoAdsToShow()
+    {
+        popup.Show(
+            AssetsDataMart.Instance.constantsSO.stringsSO.no_ads_to_show,
+            AssetsDataMart.Instance.constantsSO.stringsSO.ok,
+            null);
+    }
     public void ShowCorrectAnswerPopup(string buttonText, int score, int tobeAddedScore)
     {
         popup.Show(
@@ -368,6 +375,7 @@ public class MainGame : MonoBehaviour
     public void DisableAllUI()
     {
         LockAnswerPanel(false);
+        utilityButtons.LockAllUI(false);
 
         LockNextButton(false);
         LockPrevButton(false);
@@ -413,7 +421,6 @@ public class MainGame : MonoBehaviour
         UiAnswerInputField.interactable = state;
         UiSubmitAnswerButton.interactable = state;
 
-        utilityButtons.LockAllUI(state);
     }
 
     public void LockNextButton(bool status)

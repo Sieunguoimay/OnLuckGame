@@ -28,7 +28,7 @@ public class Main : MonoBehaviourSingleton<Main>
 
             //DontDestroyOnLoad(this);
 
-            Application.runInBackground = false;
+            Application.runInBackground = true;
 
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
 

@@ -21,6 +21,7 @@ public class Scoreboard : MonoBehaviour
     [SerializeField] private Button nextButton;
     [SerializeField] private Button prevButton;
     [SerializeField] private Spinner spinner;
+    [SerializeField] private Text nodataText;
 
     private Button currentButton = null;
     private bool shouldRefresh = false;
@@ -28,6 +29,11 @@ public class Scoreboard : MonoBehaviour
     HttpClient.Paginate<HttpClient.UserScoreResponseData> paginate = null;
 
     Filters filter = Filters.NULL;
+
+    void Start()
+    {
+        nodataText.gameObject.SetActive(false);
+    }
 
     public void Show()
     {
@@ -106,6 +112,8 @@ public class Scoreboard : MonoBehaviour
 
     private bool LoadScoreboard(string paginateUrl,int mode)
     {
+        nodataText.gameObject.SetActive(false);
+
         if (shouldRefresh)
         {
             shouldRefresh = false;
@@ -130,17 +138,22 @@ public class Scoreboard : MonoBehaviour
                          AddScoreboardItem(i, item.name, url + item.profile_picture, item.score);
                      }
                      paginateButtons.transform.parent = ScoreboardScrollList.parent;
-                     paginateButtons.SetActive(paginate.to >= paginate.per_page);
+                     paginateButtons.SetActive(paginate.to < paginate.total-1);
                      nextButton.interactable = paginate.next_page_url != null && !paginate.next_page_url.Equals("");
                      prevButton.interactable = paginate.prev_page_url != null && !paginate.prev_page_url.Equals("");
                  }
                  else
                  {
+                     Clear();
+
                      currentButton.interactable = true;
+                     paginateButtons.SetActive(false);
+                     nodataText.gameObject.SetActive(true);
+
                  }
 
-                //spinner.Hide();
-                spinner.gameObject.SetActive(false);//.Show(ScoreboardScrollList.transform);
+                 //spinner.Hide();
+                 spinner.gameObject.SetActive(false);//.Show(ScoreboardScrollList.transform);
             });
             return true;
         }

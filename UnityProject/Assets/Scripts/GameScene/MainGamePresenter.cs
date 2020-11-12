@@ -188,11 +188,32 @@ namespace Assets.Scripts.GameScene
 
                     mainGame.ClearAnswerInputField();
 
+                    mainGame.utilityButtons.hintPanel.gameObject.SetActive(false);
                     mainGame.utilityButtons.hintPanel.SetHintAndAnswer(typedQuestion.hints, typedQuestion.FirstAnswer);
 
-                    mainGame.utilityButtons.ShouldShowHintButton = typedQuestion.hints.Count > 0;
+                    if (isActive)
+                    {
+                        if (typedQuestion.hints.Count > 0)
+                        {
+                            mainGame.utilityButtons.ShowHintButton(true);
+                            mainGame.utilityButtons.ShowAnswerButton(false);
+                            mainGame.utilityButtons.ShowHintAdIcons(true);
+                        }
+                        else
+                        {
+                            mainGame.utilityButtons.ShowHintAdIcons(false);
+                            mainGame.utilityButtons.ShowHintButton(true);
+                            mainGame.utilityButtons.ShowAnswerButton(true);
+                            mainGame.utilityButtons.ShowSeeAnswerAdIcon(true);
+                        }
 
-                    mainGame.utilityButtons.ResetAll(isActive);
+                    }
+                    else
+                    {
+                        mainGame.utilityButtons.LockAllUI(false);
+                    }
+
+                    //mainGame.utilityButtons.ResetAll(isActive);
 
                     mainGame.LockAnswerPanel(isActive);
 
@@ -322,7 +343,7 @@ namespace Assets.Scripts.GameScene
 
             mainGame.LockAnswerPanel(false);
             mainGame.LockNextButton(false);
-
+            mainGame.utilityButtons.LockAllUI(false);
             if (currentQuestionIndex + 1 < playingPack.playingQuestions.Count)
             {
                 if (!IsQuestionLocked(currentQuestionIndex + 1))

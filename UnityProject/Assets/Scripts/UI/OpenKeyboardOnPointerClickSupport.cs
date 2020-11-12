@@ -14,7 +14,7 @@ public class OpenKeyboardOnPointerClickSupport : InputField
     
         if (keyboard == null || !keyboard.active)
         {
-            keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.ASCIICapable, false, false, true);
+            keyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.ASCIICapable);
         }
     }
 

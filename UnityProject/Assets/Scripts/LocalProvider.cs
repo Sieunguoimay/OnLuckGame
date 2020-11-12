@@ -113,6 +113,10 @@ public class LocalProvider
         Utils.Instance.SaveObjectToFile(playingDataList, "playing_data_list.json");
     }
 
+    public void SaveSeason(HttpClient.Season ss)
+    {
+        Utils.Instance.SaveObjectToFile(ss, "game_data.json");
+    }
     public PlayingDataMart.PlayingData GetPlayingDataByUserId(int userId)
     {
         playingDataList = Utils.Instance.LoadFileToObject<List<PlayingDataMart.PlayingData>>("playing_data_list.json");
@@ -520,7 +524,7 @@ public class LocalProvider
     //            }
     //        }
     //    }
-    //    Utils.Instance.SaveObjectToFile(season,season.name+".json");// new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = m_activeUserIndex }, "user_list.json");
+    //    Utils.Instance.SaveObjectToFile(season, season.name + ".json");// new ExtraIntegerWrapper<List<UserDataMart.UserData>>() { data = userDataList, extra_data = m_activeUserIndex }, "user_list.json");
     //}
     public QuestionDataMart.OnluckLocalMetadata LoadOnluckLocalMetadata()
     {

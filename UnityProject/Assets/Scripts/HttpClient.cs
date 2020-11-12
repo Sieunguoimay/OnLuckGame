@@ -36,6 +36,7 @@ public class HttpClient : MonoBehaviourSingleton<HttpClient>
         public int from;
         public int to;
         public int per_page;
+        public int total;
     }
 
     [System.Serializable]
@@ -458,6 +459,7 @@ public class HttpClient : MonoBehaviourSingleton<HttpClient>
             var res = JsonUtility.FromJson<Season>(response);
             
             callback(res);
+
         });
     }
 

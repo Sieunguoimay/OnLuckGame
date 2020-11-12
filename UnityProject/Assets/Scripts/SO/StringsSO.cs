@@ -46,4 +46,6 @@ public class StringsSO : ScriptableObject
     public string pls_login;
     public string you_have_already_answered_this_question;
     public string answer;
+    public string no_ads_to_show;
+
 }

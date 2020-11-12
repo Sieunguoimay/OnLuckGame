@@ -42,10 +42,11 @@ public class PopupPanel : MonoBehaviour
             {
                 m_animator.SetTrigger("show");
             }
+            Debug.Log("PopupPanel:Shown");
         }
         else
         {
-            Debug.Log("Bleh");
+            Debug.Log("PopupPanel:Bleh");
         }
     }
     public void HideImmediate()
